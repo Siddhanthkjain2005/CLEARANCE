@@ -193,4 +193,4 @@ The interface is already hosted on Cloud Run in simulated mode. See [deployment.
 
 Retain actual issue, Duo session, MR, pipeline, release, rollback incident and deployment links when validating a live integration. The exported local mock rehearsal checks implementation behavior; label it separately from real pipeline history and agent execution.
 
-Follow the [maintainer handoff](presentation/maintainer-handoff.md) for protected-file bindings and owner review. See [project status](presentation/project-status.md) for the published interface and further product work.
+Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for protected-file bindings and owner review. The [architecture guide](architecture.md) describes the integration and state model.

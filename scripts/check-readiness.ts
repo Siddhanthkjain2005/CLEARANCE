@@ -1,5 +1,4 @@
-// Reproduce local engineering checks and save their evidence. These checks
-// do not query external accounts, submission status or live Duo execution.
+// Run the engineering checks and keep generated reports beside local logs.
 
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -8,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const output = join(root, '.clearance-out/readiness');
-const proof = join(root, 'docs/proof/local');
+const proof = join(output, 'integration');
 mkdirSync(output, { recursive: true });
 mkdirSync(proof, { recursive: true });
 
@@ -51,17 +50,11 @@ const report = {
   schema: 'clearance.readiness/v1',
   createdAt: new Date().toISOString(),
   localReady: results.every((check) => check.passed),
-  scope: 'Local engineering verification; external submission status is not assessed',
+  scope: 'Local engineering verification',
   tests: { count, passed },
   bundle,
   checks: results,
-  external: {
-    gitlabIntegration: 'Optional; local mock evidence does not verify live GitLab or Duo execution',
-    cloudDeployment: 'Hosted preview is recorded separately in docs/proof/cloud-deployment.json; this local check does not verify live deployment reachability',
-    presentation: 'Product walkthrough and narration are maintained separately in docs/demo/',
-  },
 };
-mkdirSync(join(root, 'docs/proof'), { recursive: true });
-writeFileSync(join(root, 'docs/proof/readiness.json'), JSON.stringify(report, null, 2) + '\n');
-console.log(`\n${report.localReady ? 'Local checks complete.' : 'Local checks need attention.'} External account and submission status are not assessed.`);
+writeFileSync(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
+console.log(`\n${report.localReady ? 'Local checks complete.' : 'Local checks need attention.'} Report: .clearance-out/readiness/report.json`);
 process.exitCode = report.localReady ? 0 : 1;

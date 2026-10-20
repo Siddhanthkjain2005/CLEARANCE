@@ -1,23 +1,41 @@
-# Cloud Run deployment
+# Cloud deployment
 
-Deployed on 20 October 2026 to a separate project selected by the owner.
+[Open Clearance](https://clearance-tower-30123867341.northamerica-northeast1.run.app/)
 
-- Public app: [Clearance tower](https://clearance-tower-30123867341.northamerica-northeast1.run.app/tower).
-- Project: `clearance-tower-20261020`; region: `northamerica-northeast1`.
-- Service: `clearance-tower`; revision: `clearance-tower-r47ecdf7766fd`.
-- Mode: **simulated traffic**, explicitly labelled in the app. Live GitLab integration is still pending.
-- Capacity: zero minimum and one maximum instance, one CPU, 512 MiB, request-based CPU billing, 300-second request timeout.
-- Runtime identity: `clearance-tower@clearance-tower-20261020.iam.gserviceaccount.com`, created without cloud IAM roles.
+The public interface runs on Google Cloud Run with simulated delivery traffic.
 
-The container was built in Cloud Build and deployed by immutable digest. The build identity can read the private source bucket, write the image repository and write build logs.
+## Hosted service
 
-Eight public checks passed: health and expected revision, simulated state, six app routes with security headers, compressed production JavaScript, updated product copy in published assets, event stream, and rejected unauthenticated event/webhook writes. Browser inspection was unavailable because local browser use is disabled in Work settings. See [deployment evidence](proof/cloud-deployment.json) and [the exact build configuration](proof/cloud-build.json).
+| Setting | Value |
+|---|---|
+| Project | `clearance-tower-20261020` |
+| Region | `northamerica-northeast1` |
+| Service | `clearance-tower` |
+| Revision | `clearance-tower-r47ecdf7766fd` |
+| Image digest | `sha256:d5e0147bad1d894b31683aa573c48e663149319a41b1eb45187705313b157cb3` |
+| Capacity | Minimum 0, maximum 1 instance |
+| Resources | 1 CPU, 512 MiB, request-based CPU allocation |
+| Request timeout | 300 seconds |
 
-Cloud Run can scale to zero, but storage, builds and active requests can still incur charges. The instance limit is not a spending cap.
+Cloud Build produces the container image, Artifact Registry stores it, and Cloud Run deploys the immutable digest. The runtime identity is separate from the build identity.
 
-## Future deployments
+## Service checks
 
-The repository already includes [Terraform](../infra/terraform/main.tf) and [CI deployment jobs](../.gitlab/ci/deploy.yml). Follow [setup.md](setup.md) for workload identity and infrastructure. The helper below makes the initial source deployment explicit and defaults to a read-only command preview.
+- [Health](https://clearance-tower-30123867341.northamerica-northeast1.run.app/api/health) returns service status, mode and revision.
+- [State](https://clearance-tower-30123867341.northamerica-northeast1.run.app/api/state) provides the console snapshot and data mode.
+- The app serves hashed, compressed assets with a Content Security Policy.
+- Server-sent events deliver updates to the console.
+- Event and webhook writes require their configured authentication.
+
+## Deploy a separate instance
+
+The deployment helper prints its target and commands for review:
+
+```sh
+node scripts/deploy-cloud-run.ts --project YOUR_GCP_PROJECT_ID --simulated
+```
+
+For a connected GitLab instance:
 
 ```sh
 node scripts/deploy-cloud-run.ts \
@@ -25,24 +43,8 @@ node scripts/deploy-cloud-run.ts \
   --gitlab-project YOUR_GROUP/YOUR_PROJECT
 ```
 
-The preview lists the exact target, public-service setting, resource bounds, required secrets and argv. It does not change the CLI default, create billing, create secrets or deploy resources.
+Add `--apply` after reviewing the command plan. The helper requests 1 CPU, 512 MiB, minimum 0 and maximum 2 instances. Cloud usage is billed according to the target project's configuration.
 
-## Before applying
+Connected deployments use a runtime service account and Secret Manager references for the GitLab read token, webhook secret and Tower event token. Follow [GitLab setup](setup.md) for variables, webhooks and workload identity. [Terraform](../infra/terraform/main.tf) and [CI deployment jobs](../.gitlab/ci/deploy.yml) provide the infrastructure and canary workflow.
 
-- Confirm the target project and billing boundary. Enable Cloud Run, Cloud Build, Artifact Registry and Secret Manager APIs.
-- Bootstrap the runtime identity and IAM with the existing Terraform or have the owner configure them. The helper expects `clearance-tower@PROJECT_ID.iam.gserviceaccount.com`.
-- Create three Secret Manager secrets: `clearance-gitlab-token`, `clearance-webhook-secret`, and `clearance-tower-token`. Give the runtime identity access to those specific secrets. Never place their values in source or chat.
-- Confirm that the GitLab token has the required read access to the configured project. Separate that read token from the CI write credential.
-- Review that the app will be public. Deployment uses one CPU, 512 MiB, minimum zero and maximum two instances; these bounds limit scaling but do not guarantee a cost cap.
-
-After reviewing the plan and prerequisites, add `--apply` to run it. Without live credentials, an explicitly labelled visual preview can use `--simulated`; that does not complete the live workflow proof.
-
-## Verify completion
-
-1. Read the service URL printed by the helper.
-2. Confirm `GET /api/health` returns HTTP 200 and `ok: true`.
-3. Confirm `GET /api/state` reports `server.mode: live`, the intended project and a successful GitLab sync with no current error.
-4. Configure the webhook and CI event URL, then verify that a real issue/MR/pipeline appears in the console.
-5. Record the deployment URL and verification results in the deployment evidence and [project status](presentation/project-status.md).
-
-For a simulated preview, verify that `/api/state` reports `server.mode: simulated` and that the interface labels its traffic accordingly. Keep deployment records tied to the exact source and image that were verified.
+After deployment, check `/api/health`, confirm the intended mode in `/api/state`, and verify that the console receives events from the configured source.

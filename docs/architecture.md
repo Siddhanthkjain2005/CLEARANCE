@@ -1,6 +1,8 @@
 # Architecture
 
-Clearance has two halves. **Agents propose**: GitLab Duo flows plan, write, review, fix and debrief changes. **Policy disposes**: a deterministic decision engine decides how far each change may fly without a human. GitLab is the system of record throughout. The Tower, the console and API, holds nothing that can't be rebuilt from the project.
+Clearance connects a procedural 3D console, a Node.js Tower and a deterministic decision engine. The console presents flight progress and explains decisions; the Tower supplies snapshots and events; the engine evaluates risk, trust and operating conditions.
+
+The public demo uses simulated delivery traffic. In a connected GitLab deployment, project records supply issues, merge requests, pipelines and outcomes. GitLab Duo flow definitions support planning, implementation, review, repair and incident debriefing.
 
 ```mermaid
 flowchart TB
@@ -38,7 +40,7 @@ Pure TypeScript with no dependencies and no I/O. The same modules run in the pip
 
 | Module | Responsibility |
 |---|---|
-| `risk.ts` | Eight signals, each estimating the probability that the change causes an incident, combined by noisy-OR: `1 − Π(1 − pᵢ)`. Sector criticality comes from `.clearance/airspace.yml`. |
+| `risk.ts` | Eight heuristic change-risk signals, combined by noisy-OR: `1 − Π(1 − pᵢ)`. Sector criticality comes from `.clearance/airspace.yml`. |
 | `trust.ts` | Beta-Bernoulli track record per pilot with risk-weighted updates and a 30-day half-life. The governor uses the one-sided 90% lower bound. |
 | `governor.ts` | Hard holds first (protected sectors for agents, critical findings, secrets, freeze windows, exhausted budget). Then the allowance `max_risk × budget_factor × (1 + ½·max(0, trust − min_trust))` and the level thresholds. Returns the reasons, the canary plan and the pipeline tier. |
 | `pipeline.ts`, `impact.ts` | Generates the child pipeline for the tier. Test impact analysis walks the reverse import graph from the changed modules. |
@@ -93,6 +95,12 @@ React-compatible TSX rendered by Preact for the panels, and a hand-written WebGL
 - Off-axis projection so side panels never cover the action.
 
 The nine stage gates form a "tunnel in the sky" on a Catmull-Rom glide path that ends on a lit runway, with sequenced approach lights and PAPI. Flights ease along the path as their stages progress, enter racetrack holding patterns when held, and climb away on a go-around. HTML data blocks follow each aircraft with collision avoidance. Reduced-motion preferences disable drift, strobes and animation.
+
+## Evidence integrity
+
+Evidence records link canonical JSON entries through a hash chain. Verification checks each digest and its link to the preceding record. An optional HMAC authenticates the chain head using the deployment's signing key.
+
+Store signing keys in masked CI variables or Secret Manager and restrict access to the identities that sign or verify packs. The chain establishes record consistency; the HMAC establishes authentication to a shared key. Review event provenance and deployment permissions alongside the pack.
 
 ## Security model
 

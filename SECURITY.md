@@ -6,9 +6,9 @@ Include the affected component, steps to reproduce, expected impact and a minima
 
 ## Scope and deployment
 
-The public Cloud Run app currently uses labelled simulated traffic. GitLab credentials and production delivery integration are not configured in that preview. Private deployments must configure their own authentication, token scopes, owner permissions and secret storage.
+The public Cloud Run app uses labelled simulated traffic. Connected deployments configure their own authentication, token scopes, owner permissions and secret storage through the [setup guide](docs/setup.md).
 
-The governor is an explicit policy mechanism, not a substitute for GitLab permissions or owner review. Evidence hashes and optional HMAC authentication have the integrity and key-management limits described in the [website walkthrough](docs/demo/website-walkthrough.md).
+The security model combines deterministic policy decisions, platform permissions and owner review. Evidence records use a hash chain with optional HMAC authentication of the chain head. See [architecture](docs/architecture.md) for storage and key-management details.
 
 ## Secrets
 

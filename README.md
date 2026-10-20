@@ -19,7 +19,7 @@ Every change is a flight. See its progress, understand its risk and explore the 
 
 ![The Clearance control tower, with delivery flights and a live flight board](docs/images/tower.jpg)
 
-> **Demo status:** the public app is deployed on Google Cloud Run with clearly labelled simulated traffic. The risk and governor logic is implemented; real GitLab Duo sessions and delivery pipelines are not connected to this preview. [Deployment evidence](docs/proof/cloud-deployment.json) · [Verification notes](docs/proof/README.md)
+> **Interactive demo:** explore all views on Google Cloud Run with simulated delivery traffic and the implemented decision engine. [Start the tour](docs/demo/script.md).
 
 ## Why Clearance?
 
@@ -35,7 +35,7 @@ Clearance brings those questions into one spatial interface. Every change become
 - **Keep information usable.** Semantic HTML controls, visible focus states, text status labels, reduced-motion support and responsive panels complement the 3D scene.
 - **Make the world coherent.** A procedural airport, river, city, terrain and traffic give the camera journey a consistent setting.
 
-Read the [design case study](docs/design-case-study.md) for user journeys, information architecture, interaction choices, accessibility details and current validation limits.
+Read the [design case study](docs/design-case-study.md) for user journeys, information architecture, interaction choices and accessibility features.
 
 ## What is inside
 
@@ -118,7 +118,7 @@ flowchart LR
 | Assisted | Review the individual steps | 5% → 25% → 50% → 100% |
 | Hold | Owner intervention required | No deployment |
 
-Protected governance, detected secrets and critical findings can hold a change regardless of trust. The [product overview](docs/product-overview.md) explains the full workflow and its current evidence boundary.
+Protected governance, detected secrets and critical findings can hold a change regardless of trust. The [architecture guide](docs/architecture.md) explains the decision model and delivery workflow.
 
 ## Technology
 
@@ -139,7 +139,7 @@ node src/cli/clearance.ts doccheck
 npm run test:smoke
 ```
 
-`node scripts/check-readiness.ts` runs the complete local sequence and exports labelled mock-integration evidence. The browser bundle has a **160 KiB gzip budget**; the recorded production build is approximately **146 KiB**. See [verification evidence](docs/proof/README.md) for the scope of the checks and the distinction between local fixtures and live integrations.
+`node scripts/check-readiness.ts` runs the complete sequence and saves reports under the ignored `.clearance-out/readiness/` directory. The production build is approximately **146 KiB gzipped**, within the **160 KiB budget** enforced by CI. See [verification](docs/verification.md) for the checks and integration fixtures.
 
 ## Repository map
 
@@ -152,17 +152,13 @@ src/
 test/            Unit, integration, geometry, build and server checks
 scripts/         Build, readiness and setup helpers
 infra/terraform/ Google Cloud infrastructure templates
-docs/            Product, architecture, setup, demos and verification
+docs/            Design case study, demo guide and technical references
 .github/         GitHub verification workflow and contribution templates
 .gitlab/         GitLab CI includes, Duo definitions and project templates
 .clearance/      Protected policy and sector configuration
 ```
 
-Start with the [documentation index](docs/README.md), [contribution guide](CONTRIBUTING.md) or [complete website walkthrough](docs/demo/website-walkthrough.md).
-
-## Status and scope
-
-The hosted interface is available with labelled simulated traffic and locally tested decision logic. Connecting real GitLab Duo execution and pipeline history is an optional integration step. Simulated agent actions and evidence badges are examples, and SCI figures use the assumptions documented in the [carbon methodology](docs/sci-methodology.md). Formal usability studies and a complete accessibility audit have not been conducted.
+Start with the [documentation index](docs/README.md), [project story](docs/project-story.md) or [demo guide](docs/demo/script.md). Maintainers can use the [GitLab setup guide](docs/setup.md) to connect their own delivery project. SCI calculations are described in the [carbon methodology](docs/sci-methodology.md).
 
 ## Contributing and security
 

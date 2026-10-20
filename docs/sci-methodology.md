@@ -1,6 +1,6 @@
 # Carbon methodology
 
-Clearance measures the carbon cost of delivery with the Green Software Foundation's **Software Carbon Intensity** specification (SCI, ISO/IEC 21031:2024), and reduces it through the way the pipeline is built. This document covers the formula, the coefficients and their sources, a worked example, how the savings are produced, and what the numbers don't capture.
+Clearance models the carbon cost of delivery using the Green Software Foundation's **Software Carbon Intensity** specification (SCI, ISO/IEC 21031:2024). This document covers the formula, coefficients, sources, worked example and calculation boundary.
 
 ## Functional unit
 
@@ -70,20 +70,19 @@ The **avoided** column is the emissions of the jobs a fixed pipeline, one that r
 1. **Risk-proportional verification.** The governor's tier generates the child pipeline. Low-risk flights run *test impact analysis*: only the tests that transitively import a changed module, worked out from the static import graph ([`src/core/impact.ts`](../src/core/impact.ts)). Anything that can't be placed in the graph widens to the full suite, so the shortcut never skips a test that matters. Security scanning is deliberately excluded from this optimisation.
 2. **Carbon-aware placement.** The Tower is deployed to `northamerica-northeast1` at 11 gCO₂e/kWh, compared with 432 in `us-central1` and 579 in `us-east1`. `greenestRegion()` picks the cleanest region from any candidate list, and the Tower's MCP `carbon_report` tool exposes it to agents.
 3. **Idle is nearly free.** Cloud Run runs with `cpu_idle = true` (CPU is allocated only while serving) and the image is distroless with zero runtime dependencies. The Artifact Registry repository deletes images older than 30 days.
-4. **Bytes are energy.** The console is gzip-budgeted in CI (`clearance budget`). The 3D airspace is a hand-written WebGL2 renderer that draws in a handful of calls with no textures, rather than a general-purpose engine.
+4. **Transfer budget.** CI enforces the console's gzip budget (`clearance budget`). The custom WebGL2 renderer uses procedural geometry and textures, instancing, visibility culling and adaptive effects.
 5. **Fewer wasted runs.** Duplicate branch pipelines are suppressed when a merge request exists. `interruptible` jobs are cancelled by newer commits. Taxi flights skip the image build and the canary.
 
 ## Runtime SCI for the Tower
 
 The Tower also reports its own SCI per thousand requests from measured process CPU time (`process.cpuUsage()`), using the same coefficients for a 1 vCPU Cloud Run instance and the region's intensity. This is shown in the Carbon tab and returned by `/api/carbon`. It uses wall-clock uptime as the time base. That overstates usage under `cpu_idle`, where CPU isn't allocated between requests, so the figure is conservative.
 
-## Limitations
+## Model boundary and assumptions
 
-- **Location-based, not market-based.** Google matches much of its consumption with carbon-free energy purchases. SCI deliberately uses location-based grid intensity, which reflects the physical grid.
-- **Averages, not marginal intensity.** Annual averages are used. Time-of-day carbon awareness (running non-urgent jobs when the grid is cleanest) would need a live intensity feed and is future work.
-- **Durations are measured, but power is modelled.** Without hardware counters on hosted runners, utilisation is assumed at 50%.
-- **Model inference is not included.** The Duo agents' LLM inference runs on GitLab's AI gateway and isn't observable from the project, so it's outside the system boundary and reported as such.
-- **Browser rendering is not included.** The 3D console uses the viewer's GPU. The current pipeline/server SCI reports do not measure that device energy and must not be presented as a complete lifecycle footprint.
-- **Embodied share is coarse.** The host size and lifetime are CCF defaults.
+- **Grid intensity:** location-based annual regional averages.
+- **Duration:** GitLab job timings when available, or catalog estimates as described above.
+- **Power:** coefficient-based estimates with 50% assumed CI utilisation.
+- **Embodied share:** the host-size and lifetime defaults listed in the coefficient table.
+- **Coverage:** pipeline jobs and Tower request handling. External services and client-device rendering sit outside this calculation boundary.
 
-These limits apply equally to the fixed-pipeline baseline, so the *relative* savings are more robust than the absolute numbers.
+The same assumptions apply to both the adaptive pipeline and the fixed-pipeline baseline. The public demo presents modelled values from simulated delivery traffic.
