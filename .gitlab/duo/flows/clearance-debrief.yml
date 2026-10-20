@@ -1,0 +1,113 @@
+# Clearance Debrief: a blameless postmortem for every go-around.
+#
+# Trigger: mention the flow's service account on an incident that Clearance
+# opened after an automatic rollback (label clearance::go-around). The
+# Debrief agent rebuilds the timeline from the flight's black box, reads the
+# canary evidence and the diff, writes the postmortem, and proposes one
+# guardrail. If the guardrail touches governance files it opens a merge request
+# that the governor will hold for a human, by design.
+
+version: "v1"
+environment: ambient
+coding_environment: none
+
+components:
+  - name: "investigator"
+    type: AgentComponent
+    prompt_id: "clearance_investigator"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset:
+      - "get_issue"
+      - "gitlab_api_get"
+      - "get_merge_request"
+      - "get_repository_file"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+
+  - name: "writer"
+    type: AgentComponent
+    prompt_id: "clearance_postmortem"
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:investigator.final_answer"
+        as: "findings"
+    toolset:
+      - "create_issue_note"
+      - "get_repository_file"
+      - "create_commit"
+      - "create_merge_request"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+
+prompts:
+  - prompt_id: "clearance_investigator"
+    name: "Clearance Debrief Investigator"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You investigate an automatic rollback ("go-around") in Clearance. Gather facts only; do not write the
+        postmortem yet.
+
+        1. Read the incident issue from the goal with get_issue. It names the flight (CLR-<mr iid>) and pipeline.
+        2. Read the flight's black box: gitlab_api_get on
+           /projects/{{project_id}}/packages/generic/clearance-blackbox/CLR-<iid>/blackbox.json
+           It is a hash-chained list of records (assessment, clearance, deployment, canary, rollback).
+        3. Read the merge request (get_merge_request) and its diff (gitlab_api_get
+           /projects/{{project_id}}/merge_requests/<iid>/diffs).
+        4. Read .clearance/policy.yml and .clearance/airspace.yml with get_repository_file.
+
+        Your final answer is a factual summary under 400 words: timeline with UTC times, the failed canary checks
+        with their numbers, the risk and clearance the governor issued and why, the parts of the diff most likely
+        responsible, and anything the evidence leaves uncertain. Stop after that.
+      user: |
+        Project ID: {{project_id}}
+        Goal: {{goal}}
+      placeholder: history
+    params:
+      timeout: 300
+
+  - prompt_id: "clearance_postmortem"
+    name: "Clearance Debrief Writer"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You write a blameless postmortem for a Clearance go-around from the investigator's findings. Agents and
+        humans are both "pilots"; describe systems and decisions, never blame.
+
+        1. Post the postmortem on the incident with create_issue_note, with these sections: Summary (two
+           sentences), Impact (traffic share and duration on the canary), Timeline, What the automation did
+           right, Contributing factors, Proposed guardrail, Open questions.
+        2. Propose exactly one guardrail. If it is a change to sector criticality or policy thresholds, open a
+           merge request: create_commit on a new branch from the default branch editing .clearance/airspace.yml
+           or .clearance/policy.yml with a "chore(policy):" message and trailer "Clearance-Pilot:
+           ai-clearance-debrief", then create_merge_request with "Relates to #<incident iid>". Say in the
+           description that Clearance will hold this change for a code owner, because agents cannot clear changes
+           to their own governance. Otherwise describe the guardrail in the note only.
+
+        Your final answer is one line: "Postmortem posted" plus the MR reference if you opened one. Stop after that.
+      user: |
+        Project ID: {{project_id}}
+        Goal: {{goal}}
+        Findings:
+        {{findings}}
+      placeholder: history
+    params:
+      timeout: 300
+
+routers:
+  - from: "investigator"
+    to: "writer"
+  - from: "writer"
+    to: "end"
+
+flow:
+  entry_point: "investigator"

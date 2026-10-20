@@ -1,0 +1,21 @@
+# Execution environment for Clearance's Duo flows on GitLab runners.
+# Read from the default branch only.
+image: node:22
+
+setup_script:
+  - node --version
+  - git config --global user.name "Clearance agent"
+  - git config --global user.email "clearance-agent@noreply.gitlab.com"
+
+cache:
+  key:
+    files:
+      - package.json
+    prefix: clearance-flow
+  paths:
+    - .npm/
+
+network_policy:
+  include_recommended_allowed: true
+  allowed_domains:
+    - registry.npmjs.org

@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a reproducible problem in the console, engine or tooling.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities, use the repository's private security reporting form. Do not include credentials or private project data."
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Explain the observed and expected behaviour.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the route or command and whether traffic is simulated or connected to GitLab.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, Node.js version and relevant revision.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or sanitized output
+      description: Remove tokens, email addresses and private project details.

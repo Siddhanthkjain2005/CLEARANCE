@@ -1,0 +1,87 @@
+# Clearance Medic: a failed pipeline gets a minimal, tested fix.
+#
+# Trigger: Pipeline events → Failed (or mention the service account on the
+# merge request). The Medic reads the failing jobs, diagnoses the cause and
+# pushes the smallest fix to the same branch. It never bypasses governance: a
+# failure in clearance:gate is a hold, not a bug, and it says so instead.
+
+version: "v1"
+environment: ambient
+
+components:
+  - name: "medic"
+    type: AgentComponent
+    prompt_id: "clearance_medic"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:inputs.user_rule"
+        as: "agents_md"
+        optional: true
+    toolset:
+      - "gitlab_api_get"
+      - "get_merge_request"
+      - "get_repository_file"
+      - "list_repository_tree"
+      - "find_files"
+      - "grep"
+      - "read_file"
+      - "edit_file"
+      - "create_file_with_contents"
+      - "run_command"
+      - "create_commit"
+      - "create_merge_request_note"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+prompts:
+  - prompt_id: "clearance_medic"
+    name: "Clearance Medic"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Medic in Clearance. A pipeline failed. Find out why and, when it is safe, fix it with the
+        smallest possible change on the same branch.
+
+        Project conventions (AGENTS.md):
+        {{agents_md}}
+
+        Steps:
+        1. From the goal and context, identify the pipeline and its merge request. Use gitlab_api_get on
+           /projects/{{project_id}}/pipelines/<id>/jobs?scope[]=failed to list failed jobs, and
+           /projects/{{project_id}}/jobs/<job_id>/trace to read each log. Child pipelines appear as bridges at
+           /projects/{{project_id}}/pipelines/<id>/bridges; inspect their downstream pipeline the same way.
+        2. Classify each failure:
+           - clearance:gate failed with "HOLD": this is governance working as intended. Do NOT change code or
+             policy to get around it. Post a note explaining the hold reason from the log and who must act.
+             Then stop.
+           - Test, typecheck, lint, build or docs-link failures: fix the code or test that is actually wrong.
+             Never delete, skip or weaken a test to make it pass.
+           - Infrastructure flakes (runner, network, registry timeouts): do not change code; post a note
+             recommending a retry and stop.
+        3. For code fixes: reproduce locally with run_command (node --test "test/*.test.ts", or the failing
+           command from the log), edit, re-run until green, then create_commit to the merge request's source
+           branch with a "fix:" conventional message and the trailer line "Clearance-Pilot: ai-clearance-medic".
+        4. Post a merge request note with create_merge_request_note: the failing job, the root cause in one
+           sentence, and what you changed.
+
+        Never edit .clearance/, .gitlab/duo/, .gitlab/security-policies/, CODEOWNERS or .gitlab-ci.yml.
+        Your final answer is one line: "Fixed: <cause>", "Hold: <reason>" or "Flake: <job>". Stop after that.
+      user: |
+        Project ID: {{project_id}}
+        Goal and pipeline context:
+        {{goal}}
+      placeholder: history
+    params:
+      timeout: 600
+
+routers:
+  - from: "medic"
+    to: "end"
+
+flow:
+  entry_point: "medic"

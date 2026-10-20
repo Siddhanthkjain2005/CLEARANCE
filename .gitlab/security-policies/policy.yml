@@ -1,0 +1,41 @@
+# Security policies as code. Link this project (or a copy of this file in a
+# security policy project) under Secure > Policies. Clearance's own gate
+# already holds critical findings; these policies make GitLab enforce the same
+# rules even if someone edits the pipeline.
+---
+scan_execution_policy:
+  - name: Scan every flight
+    description: Secret detection and SAST run on every merge request and default-branch pipeline, whatever the risk tier.
+    enabled: true
+    rules:
+      - type: pipeline
+        branches:
+          - "*"
+    actions:
+      - scan: secret_detection
+      - scan: sast
+
+approval_policy:
+  - name: Critical findings need a human
+    description: A newly detected critical or high vulnerability blocks the merge until a maintainer approves.
+    enabled: true
+    rules:
+      - type: scan_finding
+        branches: []
+        scanners:
+          - sast
+          - secret_detection
+          - dependency_scanning
+          - container_scanning
+        vulnerabilities_allowed: 0
+        severity_levels:
+          - critical
+          - high
+        vulnerability_states:
+          - newly_detected
+    actions:
+      - type: require_approval
+        approvals_required: 1
+        role_approvers:
+          - maintainer
+          - owner

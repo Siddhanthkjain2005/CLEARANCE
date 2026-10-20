@@ -1,0 +1,84 @@
+# Govern: every flight leaves a carbon report, a sealed evidence pack, an
+# updated trust ledger and, after a go-around, a postmortem.
+
+govern:sci:
+  stage: govern
+  extends: .node
+  needs:
+    - job: clearance:assess
+    - job: clearance:gate
+      optional: true
+    - job: monitor:canary
+      optional: true
+    - job: monitor:canary-drill
+      optional: true
+  script:
+    - node src/cli/clearance.ts sci
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths: [.clearance-out/sci.json, metrics.txt]
+    reports:
+      metrics: metrics.txt
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: always
+
+govern:evidence:
+  stage: govern
+  extends: .node
+  needs:
+    - job: clearance:assess
+    - job: govern:sci
+    - job: monitor:canary
+      optional: true
+    - job: monitor:canary-drill
+      optional: true
+  script:
+    - node src/cli/clearance.ts evidence
+  artifacts:
+    when: always
+    expire_in: 1 year
+    paths: [evidence/]
+  rules:
+    - !reference [.main-only, rules]
+
+# After a go-around, the Debrief agent writes the postmortem headlessly with the
+# GitLab Duo CLI, using the Tower's MCP tools (see .gitlab/duo/mcp.json).
+# Needs DUO_CLI_TOKEN: a personal or service account token with Duo access.
+govern:debrief:
+  stage: govern
+  image: registry.gitlab.com/gitlab-org/cli:latest
+  needs:
+    - job: monitor:canary
+      optional: true
+    - job: monitor:canary-drill
+      optional: true
+    - job: govern:evidence
+  allow_failure: true
+  script:
+    - |
+      if [ "$CLEARANCE_OUTCOME" != "go-around" ]; then echo "Flight landed; nothing to debrief"; exit 0; fi
+      if [ -z "$DUO_CLI_TOKEN" ]; then echo "DUO_CLI_TOKEN not set; mention the debrief flow on the incident instead"; exit 0; fi
+    - export GITLAB_TOKEN="$DUO_CLI_TOKEN" GITLAB_HOST="$CI_SERVER_HOST"
+    - glab auth status
+    - glab duo cli --update
+    - >
+      glab duo cli run --goal "You are the Clearance Debrief agent. Flight $CLEARANCE_FLIGHT went around during canary analysis
+      in pipeline $CI_PIPELINE_URL. Read evidence/$CLEARANCE_FLIGHT.md and .clearance-out/canary.json, use the clearance MCP
+      tools get_flight and analyze_canary for context, then post a blameless postmortem on the most recent open incident labelled
+      clearance::go-around with glab: timeline, failed checks with numbers, likely cause in the diff, what the automation did
+      right, and one guardrail proposal. Do not change code or policy files."
+  rules:
+    - !reference [.main-only, rules]
+
+# Nightly: verify every evidence chain still hashes correctly and print the ledger.
+govern:audit:
+  stage: govern
+  extends: .node
+  script:
+    - node src/cli/clearance.ts ledger
+    - node scripts/audit-evidence.ts
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"

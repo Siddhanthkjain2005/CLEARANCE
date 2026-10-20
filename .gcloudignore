@@ -1,0 +1,9 @@
+.gcloudignore
+.git/
+.github/
+.gitlab/
+#!include:.gitignore
+docs/
+test/
+infra/
+*.md

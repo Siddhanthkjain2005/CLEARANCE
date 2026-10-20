@@ -1,0 +1,60 @@
+# Airspace: how much damage a bad change in each part of the repository can do.
+#
+# Sectors are matched top to bottom; the first match wins. Criticality is the
+# input to the risk model's sector signal (0 = harmless, 1 = can take the
+# service down). Protected sectors can never be cleared by an agent: Clearance
+# will not let agents rewrite the rules they are governed by.
+#
+# This file is itself in the protected governance sector.
+
+sectors:
+  - name: governance
+    paths: [".clearance/**", ".gitlab/security-policies/**", "CODEOWNERS", ".gitlab/CODEOWNERS", ".gitlab/duo/**", ".agents/**", "AGENTS.md"]
+    criticality: 1.0
+    protected: true
+    runtime: false
+
+  - name: pipeline
+    paths: [".gitlab-ci.yml", ".gitlab/ci/**"]
+    criticality: 0.85
+    runtime: false
+
+  - name: infrastructure
+    paths: ["infra/**", "Dockerfile", ".dockerignore"]
+    criticality: 0.8
+
+  - name: decision-engine
+    paths: ["src/core/**"]
+    criticality: 0.7
+
+  - name: tower-api
+    paths: ["src/tower/**", "src/cli/**"]
+    criticality: 0.55
+
+  - name: console
+    paths: ["src/web/**"]
+    criticality: 0.3
+
+  - name: tests
+    paths: ["test/**"]
+    criticality: 0.08
+    runtime: false
+
+  - name: docs
+    paths: ["docs/**", "*.md", "LICENSE"]
+    criticality: 0.02
+    runtime: false
+
+# Anything not matched above.
+default_criticality: 0.4
+
+# Changes a rollback cannot undo get an extra risk signal.
+irreversible:
+  - "**/migrations/**"
+  - "infra/**/*.tfstate"
+
+# Build manifests: changing these pulls in code nobody reviewed line by line.
+manifests:
+  - package.json
+  - package-lock.json
+  - Dockerfile

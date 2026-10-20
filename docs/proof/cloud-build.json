@@ -1,0 +1,25 @@
+{
+  "steps": [
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "env": [
+        "DOCKER_BUILDKIT=1"
+      ],
+      "args": [
+        "build",
+        "--build-arg",
+        "CLEARANCE_COMMIT=6247c2ffeab2",
+        "-t",
+        "northamerica-northeast1-docker.pkg.dev/clearance-tower-20261020/clearance/tower:6247c2ffeab2",
+        "."
+      ]
+    }
+  ],
+  "images": [
+    "northamerica-northeast1-docker.pkg.dev/clearance-tower-20261020/clearance/tower:6247c2ffeab2"
+  ],
+  "options": {
+    "logging": "CLOUD_LOGGING_ONLY"
+  },
+  "timeout": "1200s"
+}

@@ -1,0 +1,163 @@
+# Release → configure → monitor: what happens after a flight is cleared and merged.
+#
+# With Google Cloud configured (CLEARANCE_GCP_ENABLED=true and the Google Cloud
+# IAM integration set up), the canary runs on Cloud Run. Without it, the same
+# statistical canary analysis runs as a drill against a simulated target, so
+# the pipeline is complete end to end on day one.
+
+.gcloud:
+  image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+  identity: google_cloud
+  before_script:
+    - |
+      # Node for the clearance CLI (the gcloud image ships without it).
+      curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" | tar -xJ -C /opt
+      export PATH="/opt/node-v${NODE_VERSION}-linux-x64/bin:$PATH"
+    - |
+      # Fallback for projects without workload identity federation.
+      if [ -n "$GCP_SA_KEY" ]; then
+        echo "$GCP_SA_KEY" | base64 -d > /tmp/sa.json
+        gcloud auth activate-service-account --key-file /tmp/sa.json --quiet
+      fi
+    - gcloud config set project "$GOOGLE_CLOUD_PROJECT" --quiet
+
+# ------------------------------------------------------------------ release
+
+release:cut:
+  stage: release
+  extends: [.node, .clearance-artifacts]
+  needs:
+    - job: clearance:assess
+    - job: verify:flight
+    - job: container_scanning
+      optional: true
+    - job: package:image
+      optional: true
+  script:
+    - node src/cli/clearance.ts release
+  rules:
+    - !reference [.main-only, rules]
+
+# ------------------------------------------------------------------ configure
+
+configure:terraform:
+  stage: configure
+  image:
+    name: hashicorp/terraform:1.9.8
+    entrypoint: ['']
+  identity: google_cloud
+  needs: [clearance:assess]
+  variables:
+    TF_ROOT: infra/terraform
+    TF_STATE_NAME: production
+    TF_VAR_project_id: $GOOGLE_CLOUD_PROJECT
+    TF_VAR_region: $CLEARANCE_REGION
+    TF_VAR_service: $CLEARANCE_SERVICE
+    TF_VAR_gitlab_project: $CI_PROJECT_PATH
+    TF_VAR_gitlab_project_id: $CI_PROJECT_ID
+    TF_VAR_gitlab_read_token: $CLEARANCE_GITLAB_READ_TOKEN
+    TF_VAR_webhook_secret: $CLEARANCE_WEBHOOK_SECRET
+    TF_VAR_tower_token: $CLEARANCE_TOWER_TOKEN
+    TF_VAR_wif_pool_project_number: $GOOGLE_CLOUD_PROJECT_NUMBER
+    TF_VAR_wif_pool_id: $GOOGLE_WIF_POOL_ID
+  script:
+    - cd "$TF_ROOT"
+    - >
+      terraform init -input=false
+      -backend-config="address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE_NAME}"
+      -backend-config="lock_address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE_NAME}/lock"
+      -backend-config="unlock_address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE_NAME}/lock"
+      -backend-config="username=gitlab-ci-token"
+      -backend-config="password=${CI_JOB_TOKEN}"
+      -backend-config="lock_method=POST"
+      -backend-config="unlock_method=DELETE"
+      -backend-config="retry_wait_min=5"
+    - terraform validate
+    - terraform plan -input=false -out=plan.tfplan
+    - terraform show -json plan.tfplan > tfplan.json
+    - if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then terraform apply -input=false plan.tfplan; fi
+  artifacts:
+    paths: [infra/terraform/tfplan.json]
+    reports:
+      terraform: infra/terraform/tfplan.json
+  resource_group: terraform-production
+  rules:
+    - if: $CLEARANCE_GCP_ENABLED != "true"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes: [infra/**/*]
+
+configure:image:
+  stage: configure
+  extends: .gcloud
+  needs: [package:image, clearance:assess]
+  script:
+    - if [ "$CLEARANCE_RUNTIME_CHANGE" = "false" ] || [ ! -f image-digest.txt ]; then echo "Taxi flight, so there is no image to publish"; exit 0; fi
+    - curl -fsSL https://github.com/google/go-containerregistry/releases/download/v0.20.2/go-containerregistry_Linux_x86_64.tar.gz | tar -xz -C /usr/local/bin crane
+    - AR_HOST="${CLEARANCE_REGION}-docker.pkg.dev"
+    - AR_IMAGE="${AR_HOST}/${GOOGLE_CLOUD_PROJECT}/${CLEARANCE_AR_REPO:-clearance}/tower:${CI_COMMIT_SHA}"
+    - crane auth login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
+    - crane auth login "$AR_HOST" -u oauth2accesstoken -p "$(gcloud auth print-access-token)"
+    - crane copy "$CLEARANCE_IMAGE" "$AR_IMAGE"
+    - echo "CLEARANCE_AR_IMAGE=$AR_IMAGE" > image.env
+  artifacts:
+    reports:
+      dotenv: image.env
+  rules:
+    - if: $CLEARANCE_GCP_ENABLED != "true"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      changes: [src/**/*, scripts/**/*, package.json, package-lock.json, tsconfig.json, Dockerfile, .dockerignore, .clearance/**/*]
+
+# ------------------------------------------------------------------ monitor
+
+monitor:canary:
+  stage: monitor
+  extends: [.gcloud, .clearance-artifacts]
+  needs:
+    - job: clearance:assess
+    - job: release:cut
+    - job: configure:image
+      optional: true
+    - job: configure:terraform
+      optional: true
+  script:
+    - export CLEARANCE_IMAGE="${CLEARANCE_AR_IMAGE:-$CLEARANCE_IMAGE}"
+    - node src/cli/clearance.ts fly
+    - node src/cli/clearance.ts land
+  environment:
+    name: production
+    url: $CLEARANCE_TOWER_URL
+    deployment_tier: production
+  resource_group: production
+  artifacts:
+    reports:
+      dotenv: canary.env
+  rules:
+    - if: $CLEARANCE_GCP_ENABLED != "true"
+      when: never
+    - !reference [.main-only, rules]
+
+# Without Google Cloud, fly the same canary analysis against a drill target.
+# Set CLEARANCE_DRILL=errors or latency on a pipeline to watch a go-around.
+monitor:canary-drill:
+  stage: monitor
+  extends: [.node, .clearance-artifacts]
+  needs:
+    - job: clearance:assess
+    - job: release:cut
+  script:
+    - node src/cli/clearance.ts fly --drill ${CLEARANCE_DRILL:+--fault $CLEARANCE_DRILL} --time-scale 0.05
+    - node src/cli/clearance.ts land
+  environment:
+    name: drill
+    deployment_tier: testing
+  resource_group: production
+  artifacts:
+    reports:
+      dotenv: canary.env
+  rules:
+    - if: $CLEARANCE_GCP_ENABLED == "true"
+      when: never
+    - !reference [.main-only, rules]

@@ -1,0 +1,37 @@
+{
+  "name": "clearance",
+  "version": "1.0.0",
+  "description": "A control tower for GitLab Duo agents: every change asks for clearance, and autonomy is earned flight by flight.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "bin": {
+    "clearance": "src/cli/clearance.ts"
+  },
+  "scripts": {
+    "dev": "node scripts/build-web.ts && CLEARANCE_SIM_SPEED=1.5 node --watch src/tower/server.ts",
+    "start": "node src/tower/server.ts",
+    "build": "npm run build:web",
+    "build:web": "node scripts/build-web.ts",
+    "watch:web": "node scripts/build-web.ts --watch",
+    "test": "node --test \"test/*.test.ts\"",
+    "test:smoke": "node test/smoke.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "explain": "node src/cli/clearance.ts explain",
+    "ledger": "node src/cli/clearance.ts ledger",
+    "drill": "node src/cli/clearance.ts fly --drill --fault errors"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "esbuild": "^0.25.0",
+    "preact": "11.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.9.0"
+  }
+}

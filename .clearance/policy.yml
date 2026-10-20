@@ -1,0 +1,67 @@
+# Autonomy policy: how the governor turns risk and trust into clearance.
+#
+# Agents propose; this file disposes. The governor is deterministic and every
+# decision it makes cites the rule that produced it. This file sits in the
+# protected governance sector, so changing it always needs a human code owner.
+
+version: 1
+
+autonomy:
+  # Ship to production with no human in the loop.
+  autonomous:
+    max_risk: 0.35     # scaled down when the error budget is burning
+    min_trust: 0.55    # lower confidence bound of the pilot's track record
+  # A human approves the outcome before promotion.
+  supervised:
+    max_risk: 0.70
+  # A human approves each step.
+  assisted:
+    max_risk: 0.90
+  # Anything riskier is held.
+
+error_budget:
+  tighten_below: 0.50  # below half the budget, autonomy shrinks linearly
+  freeze_below: 0.10   # below 10%, only fixes and reverts may fly
+
+# Conditions that hold a flight no matter how trusted the pilot is.
+holds:
+  - protected_sectors
+  - critical_findings
+  - secrets_detected
+  - freeze_windows
+
+# Change freezes. Days are 0 = Sunday … 6 = Saturday, hours are UTC.
+# Example: hold everything except fixes over the weekend.
+#   - name: weekend
+#     days: [6, 0]
+#     from_hour: 0
+#     to_hour: 24
+freeze_windows: []
+
+# Progressive delivery per clearance level: traffic steps and bake time.
+canary:
+  autonomous:
+    steps: [25, 50, 100]
+    bake_seconds: 120
+  supervised:
+    steps: [10, 25, 50, 100]
+    bake_seconds: 300
+  assisted:
+    steps: [5, 25, 50, 100]
+    bake_seconds: 600
+
+# Canary analysis: when does a revision go around?
+analysis:
+  slo_target: 0.995
+  fast_burn: 14.4             # SRE workbook fast-burn threshold
+  max_error_rate_delta: 0.01  # practical significance for error rate
+  max_latency_p95_ratio: 1.25
+  significance: 0.05
+  min_requests: 200
+
+# Trust ledger: new pilots start sceptical and earn autonomy over time.
+trust:
+  prior_successes: 2
+  prior_failures: 3
+  half_life_days: 30
+  confidence: 0.90

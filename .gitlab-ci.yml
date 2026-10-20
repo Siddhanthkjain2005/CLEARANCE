@@ -1,0 +1,236 @@
+# Clearance: every change asks for clearance.
+#
+# One pipeline covers all nine stages of the post-code lifecycle. The first
+# job scores the change and *generates* the verification pipeline, so a docs
+# fix and a decision-engine rewrite get very different amounts of testing.
+# Security scanning never adapts. The governor's decision (autonomous,
+# supervised, assisted or hold) then drives merging, canary depth and how
+# much a human is involved.
+#
+#   plan       clearance:assess        score risk, issue preliminary clearance, generate the child pipeline
+#   create     (Duo Dispatch flow)     the merge request itself
+#   verify     verify:flight           risk-adaptive child pipeline (lean / standard / full)
+#   package    package:image           container image, SBOM, provenance
+#   secure     SAST, secrets, deps,    scanners always run; clearance:gate issues final clearance
+#              container, gate
+#   release    release:cut             semantic version and release with evidence link
+#   configure  configure:*             Terraform (GitLab-managed state), image to Artifact Registry
+#   monitor    monitor:canary          progressive delivery with statistical canary analysis
+#   govern     govern:*                trust ledger, evidence pack, carbon report, debrief
+#
+# Required CI/CD variables are listed in docs/setup.md.
+
+workflow:
+  name: '$CLEARANCE_PIPELINE_NAME'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables:
+        CLEARANCE_PIPELINE_NAME: 'Flight !$CI_MERGE_REQUEST_IID: $CI_MERGE_REQUEST_TITLE'
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        CLEARANCE_PIPELINE_NAME: 'Landing $CI_COMMIT_SHORT_SHA: $CI_COMMIT_TITLE'
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"
+      variables:
+        CLEARANCE_PIPELINE_NAME: 'Clearance $CI_PIPELINE_SOURCE run'
+  auto_cancel:
+    on_new_commit: interruptible
+
+stages:
+  - plan
+  - verify
+  - package
+  - test        # GitLab security templates default here; jobs are moved to `secure` below
+  - secure
+  - clearance
+  - release
+  - configure
+  - monitor
+  - govern
+
+variables:
+  NODE_IMAGE: node:22
+  NODE_VERSION: '22.20.0'
+  CLEARANCE_SERVICE: clearance-tower
+  CLEARANCE_REGION: northamerica-northeast1   # Montréal: 97% carbon-free energy, 11 gCO2e/kWh
+  CLEARANCE_RUNNER_REGION: us-east1      # GitLab.com hosted runners; used for SCI
+  CLEARANCE_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  SECURE_LOG_LEVEL: info
+  AST_ENABLE_MR_PIPELINES: 'true'        # run security templates in merge request pipelines
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - local: .gitlab/ci/deploy.yml
+  - local: .gitlab/ci/govern.yml
+
+default:
+  interruptible: true
+  retry:
+    max: 1
+    when: [runner_system_failure, stuck_or_timeout_failure, scheduler_failure]
+
+.node:
+  image: $NODE_IMAGE
+  cache:
+    key:
+      files: [package.json]
+    paths: [.npm/]
+    policy: pull
+  variables:
+    npm_config_cache: $CI_PROJECT_DIR/.npm
+
+.clearance-artifacts:
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .clearance-out/
+      - evidence/
+    reports:
+      dotenv: clearance.env
+
+.mr-only:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+.main-only:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+# ------------------------------------------------------------------ plan
+
+clearance:assess:
+  stage: plan
+  extends: [.node, .clearance-artifacts]
+  variables:
+    GIT_DEPTH: 0          # the risk model diffs against the merge base
+  script:
+    - node src/cli/clearance.ts assess
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: on_success
+
+# ------------------------------------------------------------------ verify
+
+verify:flight:
+  stage: verify
+  needs: [clearance:assess]
+  trigger:
+    include:
+      - artifact: .clearance-out/child-pipeline.yml
+        job: clearance:assess
+    strategy: depend
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: on_success
+
+# ------------------------------------------------------------------ package
+
+package:image:
+  stage: package
+  image: docker:27
+  services:
+    - docker:27-dind
+  needs: [clearance:assess]
+  variables:
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_BUILDKIT: '1'
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - if [ "$CLEARANCE_RUNTIME_CHANGE" = "false" ]; then echo "Taxi flight, nothing shipped changed, so no image is needed"; exit 0; fi
+    - docker pull "$CI_REGISTRY_IMAGE:latest" || true
+    - >
+      docker build --pull
+      --cache-from "$CI_REGISTRY_IMAGE:latest"
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      --build-arg CLEARANCE_COMMIT="$CI_COMMIT_SHA"
+      --label org.opencontainers.image.revision="$CI_COMMIT_SHA"
+      --label org.opencontainers.image.source="$CI_PROJECT_URL"
+      --label io.clearance.flight="$CLEARANCE_FLIGHT"
+      -t "$CLEARANCE_IMAGE" .
+    - docker push "$CLEARANCE_IMAGE"
+    - docker inspect --format '{{index .RepoDigests 0}}' "$CLEARANCE_IMAGE" | tee image-digest.txt
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$CLEARANCE_IMAGE" "$CI_REGISTRY_IMAGE:latest" && docker push "$CI_REGISTRY_IMAGE:latest"
+      fi
+  artifacts:
+    paths: [image-digest.txt]
+    expire_in: 30 days
+  rules:
+    # Taxi flights (docs, tests, pipeline-only changes) ship nothing, so no image.
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes: [src/**/*, scripts/**/*, package.json, package-lock.json, tsconfig.json, Dockerfile, .dockerignore, .clearance/**/*]
+
+package:sbom:
+  stage: package
+  extends: .node
+  needs: [clearance:assess]
+  script:
+    - node scripts/sbom.ts > gl-sbom-clearance.cdx.json
+    - echo "SBOM with $(node -e "console.log(require('./gl-sbom-clearance.cdx.json').components.length)") components"
+  artifacts:
+    paths: [gl-sbom-clearance.cdx.json]
+    reports:
+      cyclonedx: gl-sbom-clearance.cdx.json
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: on_success
+
+# ------------------------------------------------------------------ secure
+# Scanners never adapt to risk. Their reports feed the gate. Other analyzers
+# from the templates (if your stack triggers them) run in the `test` stage.
+
+semgrep-sast:
+  stage: secure
+  artifacts:
+    paths: [gl-sast-report.json]
+secret_detection:
+  stage: secure
+  artifacts:
+    paths: [gl-secret-detection-report.json]
+container_scanning:
+  stage: secure
+  needs: [package:image]
+  variables:
+    CS_IMAGE: $CLEARANCE_IMAGE
+  artifacts:
+    paths: [gl-container-scanning-report.json]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CONTAINER_SCANNING_DISABLED
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes: [src/**/*, scripts/**/*, package.json, package-lock.json, tsconfig.json, Dockerfile, .dockerignore, .clearance/**/*]
+
+clearance:gate:
+  stage: clearance
+  extends: [.node, .clearance-artifacts]
+  needs:
+    - job: clearance:assess
+    - job: verify:flight
+    - job: semgrep-sast
+      optional: true
+    - job: secret_detection
+      optional: true
+    - job: container_scanning
+      optional: true
+    - job: gemnasium-dependency_scanning
+      optional: true
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - node src/cli/clearance.ts gate
+  rules:
+    - !reference [.mr-only, rules]

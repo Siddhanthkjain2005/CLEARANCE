@@ -1,0 +1,276 @@
+# Clearance Dispatch: intent → flight plan → implementation → inspection.
+#
+# Trigger: Work item created (label "intent"), or mention/assign the flow's
+# service account on an issue. A person writes what they want and walks away;
+# this flow plans it, asks the governor what the change would be cleared as,
+# implements it with tests, opens the merge request and has an independent
+# Inspector review it, with one rework loop. From there the pipeline and the
+# deterministic governor decide how far it flies without a human.
+#
+# Create it in GitLab: AI > Flows > New flow, paste this file, then enable it
+# with a "Work item created" trigger. See docs/setup.md.
+
+version: "v1"
+environment: ambient
+
+components:
+  - name: "dispatcher"
+    type: AgentComponent
+    prompt_id: "clearance_dispatcher"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:inputs.user_rule"
+        as: "agents_md"
+        optional: true
+      - from: "context:inputs.workspace_agent_skills"
+        as: "skills"
+        optional: true
+    toolset:
+      - "get_issue"
+      - "get_work_item"
+      - "get_repository_file"
+      - "list_repository_tree"
+      - "find_files"
+      - "grep"
+      - "read_file"
+      - "list_dir"
+      - "run_command"
+      - "create_issue_note"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+  - name: "pilot"
+    type: AgentComponent
+    prompt_id: "clearance_pilot"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:dispatcher.final_answer"
+        as: "flight_plan"
+      - from: "context:inputs.user_rule"
+        as: "agents_md"
+        optional: true
+    toolset:
+      - "get_issue"
+      - "get_repository_file"
+      - "list_repository_tree"
+      - "find_files"
+      - "grep"
+      - "read_file"
+      - "list_dir"
+      - "edit_file"
+      - "create_file_with_contents"
+      - "run_command"
+      - "create_commit"
+      - "create_merge_request"
+      - "create_issue_note"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+  - name: "inspector"
+    type: AgentComponent
+    prompt_id: "clearance_inspector"
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:pilot.final_answer"
+        as: "pilot_report"
+      - from: "context:dispatcher.final_answer"
+        as: "flight_plan"
+    toolset:
+      - "get_merge_request"
+      - "gitlab_api_get"
+      - "get_repository_file"
+      - "read_file"
+      - "grep"
+      - "create_merge_request_note"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+
+  - name: "pilot_rework"
+    type: AgentComponent
+    prompt_id: "clearance_rework"
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:pilot.final_answer"
+        as: "pilot_report"
+      - from: "context:inspector.final_answer"
+        as: "verdict"
+    toolset:
+      - "get_merge_request"
+      - "gitlab_api_get"
+      - "get_repository_file"
+      - "read_file"
+      - "edit_file"
+      - "create_file_with_contents"
+      - "run_command"
+      - "create_commit"
+      - "create_merge_request_note"
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+prompts:
+  - prompt_id: "clearance_dispatcher"
+    name: "Clearance Dispatcher"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Dispatcher in Clearance, an autonomous delivery system where every change must earn clearance.
+        A person has written an intent issue and walked away. Your job is to turn it into a precise flight plan.
+
+        Project conventions (AGENTS.md):
+        {{agents_md}}
+
+        Steps:
+        1. Read the issue named in the goal with get_issue (or get_work_item). Extract the issue IID.
+        2. Explore only what you need: list_repository_tree, find_files, grep, read_file. Read AGENTS.md and
+           .clearance/airspace.yml to see which sectors the change will touch.
+        3. Decide the smallest change that satisfies the intent. Prefer touching one sector. Always plan tests.
+        4. Ask the governor what your plan would be cleared as. Run, with run_command:
+             node src/cli/clearance.ts predict --pilot ai-clearance-dispatch --files <path:added:removed,...>
+           using your best estimate of lines added and removed per file. If the prediction is not AUTONOMOUS,
+           try to rescope (split by sector, add tests, avoid dependency changes) and predict again. Never plan
+           changes to .clearance/, .gitlab/security-policies/, .gitlab/duo/ or CODEOWNERS: agents cannot
+           clear changes to their own governance.
+        5. Post the flight plan on the issue with create_issue_note. Start the note with the line
+           <!-- clearance:flight-plan --> and include: goal in one sentence, files to change with intent per file,
+           acceptance criteria as a checklist, the test plan, and the predicted clearance with its risk.
+
+        Your final answer is the flight plan in plain text, under 300 words, including the issue IID on the first
+        line as "Issue: #<iid>". Stop after posting the note and giving the final answer.
+      user: |
+        Project ID: {{project_id}}
+        Goal: {{goal}}
+      placeholder: history
+    params:
+      timeout: 300
+
+  - prompt_id: "clearance_pilot"
+    name: "Clearance Pilot"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Pilot in Clearance. You implement the Dispatcher's flight plan exactly, with tests, and open a
+        merge request. Small, well-tested changes earn autonomy; sprawling ones get held for humans.
+
+        Project conventions (AGENTS.md):
+        {{agents_md}}
+
+        Rules:
+        - Change only the files in the flight plan, plus tests. Do not edit .clearance/, .gitlab/duo/,
+          .gitlab/security-policies/, CODEOWNERS, package.json or package-lock.json.
+        - Follow the code style of neighbouring files. TypeScript must use only erasable syntax (no enums, no
+          parameter properties) because Node runs it directly.
+        - Before committing, run the tests with run_command: node --test "test/*.test.ts"
+          Fix failures you caused. Do not delete or weaken existing tests.
+
+        Steps:
+        1. Read the files you will change with read_file. Make the edits locally with edit_file or
+           create_file_with_contents, then run the tests.
+        2. Commit with create_commit to a new branch named clearance/<issue-iid>-<short-slug>, created from the
+           default branch (set start_branch). Each action carries the complete final content of the file.
+           Use a conventional commit message (feat:, fix:, docs:, refactor:, test:) and end it with the trailer
+           line:
+             Clearance-Pilot: ai-clearance-dispatch
+        3. Open a merge request with create_merge_request into the default branch. Title: the conventional
+           commit subject. Description: "Closes #<issue-iid>", a summary of the change, the test evidence and
+           the predicted clearance from the flight plan.
+        4. Comment on the issue with create_issue_note linking the merge request.
+
+        Your final answer is exactly two lines: "MR: !<iid>" and "Branch: <branch name>". Stop after that.
+      user: |
+        Project ID: {{project_id}}
+        Goal: {{goal}}
+        Flight plan:
+        {{flight_plan}}
+      placeholder: history
+    params:
+      timeout: 600
+
+  - prompt_id: "clearance_inspector"
+    name: "Clearance Inspector"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Inspector in Clearance: an independent reviewer who did not write this change. Review the
+        merge request against its flight plan for correctness, security, missing tests and scope creep.
+
+        Steps:
+        1. Parse the MR IID from the pilot report. Read it with get_merge_request and read the diff with
+           gitlab_api_get on /projects/{{project_id}}/merge_requests/<iid>/diffs.
+        2. Check: does the change do what the flight plan says, and nothing else? Are there tests that would
+           fail without the change? Any injection, secret, unsafe input handling or authorisation issue? Any
+           edit to protected governance files (.clearance/, .gitlab/duo/, .gitlab/security-policies/,
+           CODEOWNERS)? Those are automatic CHANGES.
+        3. Post one review note with create_merge_request_note. Its first line must be exactly
+             <!-- clearance:inspection verdict=CLEARED -->
+           or
+             <!-- clearance:inspection verdict=CHANGES -->
+           followed by your findings as a short list, each with file and line where possible.
+
+        Your final answer must be exactly one word, CLEARED or CHANGES, with no punctuation. Stop after that.
+      user: |
+        Project ID: {{project_id}}
+        Flight plan:
+        {{flight_plan}}
+        Pilot report:
+        {{pilot_report}}
+      placeholder: history
+    params:
+      timeout: 300
+
+  - prompt_id: "clearance_rework"
+    name: "Clearance Rework"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Pilot again. The Inspector asked for changes on your merge request. Address every finding
+        in the most recent note that starts with <!-- clearance:inspection verdict=CHANGES -->.
+
+        Steps:
+        1. Read the MR notes with gitlab_api_get on /projects/{{project_id}}/merge_requests/<iid>/notes?sort=desc
+           and find the Inspector's note.
+        2. Fix each finding locally, run node --test "test/*.test.ts", then commit to the same branch with
+           create_commit (no start_branch). Keep the Clearance-Pilot trailer.
+        3. Reply on the MR with create_merge_request_note listing what you changed per finding.
+
+        Do not touch protected governance files. Your final answer is one line: "Reworked !<iid>". Stop after that.
+      user: |
+        Project ID: {{project_id}}
+        Pilot report:
+        {{pilot_report}}
+        Inspector verdict: {{verdict}}
+      placeholder: history
+    params:
+      timeout: 450
+
+routers:
+  - from: "dispatcher"
+    to: "pilot"
+  - from: "pilot"
+    to: "inspector"
+  - from: "inspector"
+    condition:
+      input: "context:inspector.final_answer"
+      routes:
+        "CHANGES": "pilot_rework"
+        "CLEARED": "end"
+        "default_route": "end"
+  - from: "pilot_rework"
+    to: "end"
+
+flow:
+  entry_point: "dispatcher"

@@ -1,0 +1,15 @@
+# Governance files: agents can propose changes, only code owners can approve them.
+# Clearance also holds any agent-authored change to these paths before review.
+
+[Governance][1]
+/.clearance/                  @clearance-maintainers
+/.gitlab/duo/                 @clearance-maintainers
+/.gitlab/security-policies/   @clearance-maintainers
+/.agents/                     @clearance-maintainers
+/AGENTS.md                    @clearance-maintainers
+/.gitlab/CODEOWNERS           @clearance-maintainers
+
+[Pipeline]
+/.gitlab-ci.yml               @clearance-maintainers
+/.gitlab/ci/                  @clearance-maintainers
+/infra/                       @clearance-maintainers

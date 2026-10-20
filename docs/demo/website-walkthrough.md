@@ -1,0 +1,808 @@
+# Clearance — complete website walkthrough and technical presentation script
+
+Prepared for the Google Cloud deployment on 20 October 2026.
+
+**Website:** https://clearance-tower-30123867341.northamerica-northeast1.run.app/
+
+**How to use this script:** Read the paragraphs under **Say** aloud. Follow the **Show** instructions while presenting. **Presenter notes** explain details you may need for questions. This is a long-form product and engineering walkthrough, not the under-three-minute hackathon video. Numbers, flight IDs and available flight-detail sections change as the simulator runs; describe the values actually on your screen.
+
+**Version and evidence boundary:** This walkthrough is based on the source deployed as revision `clearance-tower-r6247c2ffeab2`. The public app is hosted on Cloud Run, but its delivery traffic is simulated. The risk calculation, governor and canary-analysis algorithms are implemented code. Current flight histories, agent activity, canary inputs and displayed evidence metadata are synthetic. The GitLab Duo flows and CI/CD configuration exist in the repository; real Duo execution and public GitLab pipeline evidence have not been connected to this deployment.
+
+---
+
+## 01. Opening: what Clearance actually does
+
+**Show:** Open the homepage, before entering the tower.
+
+**Say:**
+
+“Welcome to Clearance, a control tower for autonomous software delivery.
+
+“Writing code is only one part of delivering software. A change still needs review, tests, security checks, packaging, release management, monitoring and an accountable record of what happened. Clearance asks how much of that process an agent should be allowed to perform without a human intervening.
+
+“It answers using three main inputs: the risk of this particular change, the trust its author has earned from previous outcomes, and the reliability budget remaining for the service.
+
+“The aviation metaphor connects those ideas. A software change is a flight. Its author is the pilot. Delivery stages become gates along an approach. A successful delivery lands. A blocked change holds. A failed canary goes around and returns traffic to the stable revision.
+
+“The important output is a decision with reasons: autonomous, supervised, assisted or holding. The aircraft and landscape make that process visible, while the panels explain the underlying decisions.”
+
+## 02. Homepage header, identity and navigation
+
+**Show:** Point to the wordmark, symbol and navigation across the top.
+
+**Say:**
+
+“The Clearance wordmark is also the home link. Its small geometric symbol and accent-coloured full stop repeat the visual identity used throughout the site.
+
+“The flight-path link takes us down the homepage to the lifecycle overview. The governor link opens the interactive decision playground. Enter the tower opens the operational console.
+
+“The page uses Manrope for general interface text and IBM Plex Mono for instrument-style labels and numerical information. The dark blue-green background, pale text and restrained mint, amber and rose accents are designed to keep the scene visible while making operational information readable.
+
+“Navigation changes the browser URL, so the main views can be bookmarked and browser Back and Forward remain useful.”
+
+**Presenter note:** Some homepage navigation links are hidden at smaller widths. Their absence on a phone is a responsive layout choice.
+
+## 03. Homepage hero and tower-status instrument
+
+**Show:** Read “Your code. Cleared for takeoff.” Point to the explanatory paragraph, both actions, status and flight count.
+
+**Say:**
+
+“The main headline introduces the product in the language of the airspace. The supporting paragraph explains the mechanism: agents move changes through delivery, while Clearance decides how far they may proceed using risk, earned trust and policy.
+
+“Open the tower is the main action. Explore the flight path takes us through the explanation first. The scroll prompt offers the same guided route through the page.
+
+“The tower-status instrument shows the current data mode and the number of active flights. If some are holding, their count appears too. These are current snapshot values rather than fixed marketing numbers.
+
+“The public deployment says Simulated traffic. That means the examples are generated for the demonstration. It does not mean the interface is disconnected: the browser can be connected to the Tower and receive live updates containing simulated delivery events.”
+
+## 04. The scroll-driven flight and nine-gate overview
+
+**Show:** Scroll slowly to “One intent. Nine gates. A safe arrival.” Use one numbered stage link.
+
+**Say:**
+
+“The nine numbered points describe the entire delivery route: Plan, Create, Verify, Package, Secure, Release, Configure, Monitor and Govern.
+
+“Each label is a link to its chapter. The descending route graphic connects the lifecycle to an aircraft approaching a runway.
+
+“The 3D scene is persistent behind the page. As we scroll, the application measures the chapter positions and maps the scroll position to progress along the approach. The camera and presentation aircraft move with the story instead of playing an unrelated background video.
+
+“The presentation aircraft on this page is a guided illustration. It should not be described as a real merge request being deployed simply because we scrolled past a chapter.”
+
+## 05. Plan — start with an intent
+
+**Show:** Stop at “Start with an intent.”
+
+**Say:**
+
+“Plan begins with the outcome a person wants, written as an intent issue in GitLab.
+
+“The Dispatch flow is designed to turn that intent into a flight plan: the files it expects to touch, the implementation approach, acceptance criteria and a verification plan.
+
+“Before writing code, the agent can ask Clearance to assess the proposed scope. If the plan exceeds its earned autonomy, it can make the change smaller, keep it within fewer sectors or add appropriate tests.
+
+“The artifact shown here is intent issue to flight plan. The goal is to assess the planned change before implementation, when reshaping the work is cheaper.”
+
+## 06. Create — an accountable pilot implements the change
+
+**Show:** Move to “A pilot takes the controls.”
+
+**Say:**
+
+“Create is the implementation stage. The Pilot component of Dispatch is designed to write the change, add tests and open a merge request.
+
+“The pilot identity lets the project associate the outcome with the agent or person responsible. The repository requires a Clearance-Pilot commit trailer for this purpose.
+
+“That identity is important because trust belongs to an author’s delivery history. A later success or failure changes what that pilot may do next.
+
+“The page describes signed commits, but an identity trailer and a cryptographic commit signature are different mechanisms. For a live demonstration, any claim about signed commits needs actual GitLab signature evidence.”
+
+## 07. Verify — verification depth follows risk
+
+**Show:** Move to “The right checks for the flight.”
+
+**Say:**
+
+“Verify adjusts the amount of verification to the change. A small documentation correction does not need the same expensive work as a rewrite of the decision engine.
+
+“The implementation generates a child pipeline from the governor’s verification tier. Depending on the tier, it can check documentation links, run impacted tests, run the full suite, type-check the project, build the browser app, smoke-test the server or perform a sustained-load soak test.
+
+“The Inspector component is designed to review the implementation independently against its plan and request rework when needed.
+
+“Risk adaptation changes verification depth. The security-scanning configuration is handled separately, so the presentation should not imply that a low-risk score simply switches security checks off.”
+
+## 08. Package — build the release artifact
+
+**Show:** Move to “Build once. Carry the proof.”
+
+**Say:**
+
+“Package creates the container image that can be deployed, along with a software bill of materials and provenance information.
+
+“A software bill of materials describes included software components. Provenance information links the artifact to the source and build that produced it.
+
+“The underlying principle is to promote the artifact that was checked, rather than rebuild something different during deployment.
+
+“The website’s current Google Cloud deployment follows that principle: Cloud Build produced an image, and Cloud Run received that image by its immutable digest.”
+
+**Presenter note:** Do not claim a particular SLSA level, independently signed supply-chain attestation or certification merely from the presence of an SBOM and image metadata.
+
+## 09. Secure — request clearance
+
+**Show:** Move to “Ask the tower for clearance.”
+
+**Say:**
+
+“Secure combines scanner findings with the governor’s decision.
+
+“The configured scanning categories include static application security testing, secret detection, dependency scanning and container scanning. Their reports feed the delivery gate when the corresponding GitLab jobs run.
+
+“The governor itself is deterministic TypeScript. It considers the assessed risk, the pilot’s trust and the remaining error budget, then returns a clearance level, reasons, verification tier, approval requirement and canary plan.
+
+“A language model may propose a change or review code, but the model does not get to invent its own clearance decision. The policy engine provides that boundary.”
+
+## 10. Release — attach the reason for shipping
+
+**Show:** Move to “A release with a flight record.”
+
+**Say:**
+
+“Release gives a successful change a version and release notes, linked to its pilot, clearance and evidence.
+
+“The repository includes release logic that derives semantic version changes from conventional commit messages. The intent is to make a release traceable back to the decision that allowed it to proceed.
+
+“This chapter describes the configured workflow. In the current public preview, flight release events are simulated; they are not proof that a corresponding GitLab release has actually been published.”
+
+## 11. Configure — prepare a canary without exposing users
+
+**Show:** Move to “Line up for a safe approach.”
+
+**Say:**
+
+“Configure prepares the candidate revision before it receives production traffic.
+
+“The full delivery configuration supports Terraform, Artifact Registry and Cloud Run. It can create a tagged canary revision initially assigned zero traffic, while the stable revision continues to serve users.
+
+“This separates creating a revision from deciding that it is safe to expose.
+
+“The current website is genuinely hosted on Cloud Run. However, the GitLab-driven progressive deployment workflow is a separate integration and has not yet been connected to this preview.”
+
+## 12. Monitor — promotion, extension or go-around
+
+**Show:** Move to “Watch the landing. Be ready to turn.”
+
+**Say:**
+
+“Monitor compares the candidate with the stable baseline as traffic increases through the selected steps.
+
+“The canary engine examines error rates, latency samples and error-budget burn. It can promote a healthy revision, extend observation when there is too little evidence, or roll back when the checks fail.
+
+“In the aviation metaphor, rollback becomes a go-around: the candidate abandons its landing and the stable revision retains or regains traffic.
+
+“There is also a canary-drill path for projects without a connected cloud deployment workflow. A drill exercises the analysis with synthetic probes and should be identified as a drill.”
+
+## 13. Govern — learn from the outcome
+
+**Show:** Move to “Every landing changes the next.”
+
+**Say:**
+
+“Govern records the outcome, updates pilot trust, assembles the evidence pack and calculates Software Carbon Intensity for the change.
+
+“The evidence model links decisions and delivery events in a hash chain. Where configured, an HMAC authenticates the chain head.
+
+“After a go-around, the Debrief flow is designed to reconstruct the incident timeline from that record and write a postmortem.
+
+“This closes the feedback loop: delivery does not end with a green job. Its outcome becomes evidence that influences the next decision.”
+
+## 14. Homepage principles — trust, policy and footprint
+
+**Show:** Continue through “The rules of the airspace.”
+
+**Say:**
+
+“The first principle is trust. The pilot list shows a few current pilots, their trust values and a marker for the minimum trust needed for autonomous runtime changes. The link opens the full ledger.
+
+“The second principle is policy. The small policy window displays the autonomous risk threshold, the minimum trust threshold and the protected-sector hold rule. It is a readable snapshot, not an editor that changes the production policy. Try a change in the governor opens the what-if playground.
+
+“The third principle is footprint. Its two readouts show average carbon per change and the modelled fraction avoided by adaptive verification. In this deployment, they are based on simulated flights.
+
+“These three principles connect the product’s main ideas: trust is earned, policy explains decisions, and delivery work has a footprint that can be modelled and reduced.”
+
+## 15. Homepage crew cards, MCP note and footer
+
+**Show:** Point to Dispatch, Medic, Debrief, the MCP note and the final call to action.
+
+**Say:**
+
+“The crew section introduces three different jobs.
+
+“Dispatch handles the intent-to-merge-request path through planning, implementation, inspection and possible rework.
+
+“Medic is designed to respond to a failed pipeline, read its logs and push a minimal fix to the same branch. A failed job is not permission to bypass a policy hold.
+
+“Debrief is designed to respond to a go-around incident by reconstructing what happened and writing a postmortem grounded in the evidence.
+
+“The MCP note explains how agents can query the Tower as a tool. For example, assess_change can return the proposed change’s risk and clearance before implementation starts.
+
+“The final Enter the tower button moves into the console. The footer repeats the home link, identifies the MIT licence and hackathon context, and offers Back to top.”
+
+**Presenter note:** The crew cards explain the flow definitions. They are not buttons that launch three working agents from the public page.
+
+## 16. Console shell — every persistent control
+
+**Show:** Enter `/tower` and point around the screen before opening any flight.
+
+**Say:**
+
+“The console keeps the 3D world behind a persistent instrument layer.
+
+“At the top, the wordmark returns home. The four navigation tabs are Airspace, Trust ledger, Carbon and Governor. The active tab is highlighted.
+
+“The mode chip distinguishes simulated traffic from live GitLab traffic. Separate connection text tells us whether the browser is connected to the Tower, reconnecting or unable to reach it. Tower connected means the data connection works; it does not mean GitLab is connected.
+
+“TWR / 001 is a visual tower identifier. It is not a real aviation facility code.
+
+“The heading introduces the current view. The right-side panel contains the flight board or whichever analytical view we select. Its numbered heading identifies that panel.
+
+“The runway label reads RWY 09 / 27. The region label reads Montréal for this deployment because the service is hosted in northamerica-northeast1. That label describes hosting location; the procedural landscape is not a surveyed reconstruction of Montréal.
+
+“The footer reports the connection state and repeats the idea: nine gates, one clearance.”
+
+## 17. Camera controls and scene expansion
+
+**Show:** Demonstrate Approach, Airport, Riverside and Tower. Select a flight before demonstrating Follow flight. Use Expand airspace and restore the board.
+
+**Say:**
+
+“Approach provides an overview of the delivery route and stage gates.
+
+“Airport moves the emphasis to the terminal, stands, runway and ground operations. The heading changes to Clearance International.
+
+“Riverside concentrates on the city and water, with the heading The river district.
+
+“Tower provides a controller-style viewpoint from the tower position.
+
+“Follow flight tracks the selected delivery aircraft. It is disabled until a flight is selected. Selecting a new flight automatically switches to follow mode, while the inspector remains open.
+
+“Dragging the scene changes the camera orientation. The mouse wheel changes zoom in interactive console views. Clicking near a visible delivery aircraft can select it. These are orbit and viewing controls, not a first-person game controller.
+
+“Expand airspace hides the analytical panel and instruments while preserving the camera controls. Show flight board restores them. The panel’s own expand control offers the opposite emphasis: more room to read the board.
+
+“On wider screens, the rendering camera is shifted so important scene content is framed beside the panel rather than always sitting underneath it.”
+
+## 18. Reading aircraft, tags and stage gates
+
+**Show:** Return to Approach or Tower, where aircraft labels are available.
+
+**Say:**
+
+“Each tracked delivery flight receives an aircraft and an on-screen data block.
+
+“The call sign identifies the flight. INT identifies an intent issue and CLR identifies a merge-request flight in the event model. In the public demonstration these IDs are simulated examples.
+
+“The tag combines the risk number with a compact clearance code: AUT for autonomous, SUP for supervised, AST for assisted and HLD for holding. ASM means the flight is still being assessed. A monitoring flight may also show its canary traffic percentage.
+
+“The nine gate labels repeat the lifecycle stages. A count beside a stage indicates the active or holding flights currently associated with it.
+
+“The visual state also follows delivery. A flight waiting at a long-running stage can circle for spacing. A held flight enters a racetrack holding pattern. A go-around climbs away. A successful arrival touches down, rolls out and taxis clear.
+
+“Aircraft liveries help distinguish pilots, including a violet family for agent aircraft. Clearance colours are a separate layer used for trails, labels and operational state.
+
+“Some parked aircraft, departures and distant traffic are ambient world animation. They should not be counted as extra software changes just because they appear in the scene.”
+
+**Presenter note:** Aircraft tags are hidden in scenic Airport/Riverside views and on narrow screens. They are not meant to be visible in every camera mode.
+
+## 19. Airport — the physical objects and operational detail
+
+**Show:** Choose Airport, expand the airspace and rotate slowly.
+
+**Say:**
+
+“The airport is assembled from procedural geometry at metre scale. The runway is approximately 3,200 metres long and 45 metres wide in the model.
+
+“Its surfaces include runway markings and numbers, taxiways, turnoffs, an apron, aircraft stands and supporting paved areas. Approach lights, runway lights and precision-approach-style indicators establish the arrival direction. Windsocks and instrument-landing-system equipment add recognisable airport detail.
+
+“The terminal uses structural bays, curved roof shells, glazing and an entrance canopy. Enclosed jet bridges connect the terminal area to aircraft positions, with glass sides, roofs and telescoping-style cabins.
+
+“The tower has a raised glazed cab, structural supports, antennas and a beacon. A radar antenna adds motion to the airfield scene. Hangars and cargo/service buildings occupy their own hardstands rather than floating directly over generic grass.
+
+“The apron contains vehicles associated with ground operations: baggage carts, tugs, fuel trucks, catering trucks, belt loaders, follow-me vehicles and apron buses. Parked airliners make the terminal feel occupied.
+
+“Beyond the airside, the landside campus includes roads, parking areas, a multi-storey car park, a rental-car lot, a hotel, office buildings and perimeter fencing.
+
+“These are recognisable real-world object types built in code. This is a fictional airport environment, rather than a live airport feed or a certified operational model.”
+
+## 20. Aircraft construction and ambient departure animation
+
+**Show:** Use Follow flight for a close view; return to Airport to watch ground movement.
+
+**Say:**
+
+“The airliner is a procedural narrow-body twinjet, approximately 37.6 metres long with a 35.8-metre span. Its mesh includes a shaped fuselage, cockpit and cabin windows, swept wings, winglets, stabilisers, engines on pylons and landing gear.
+
+“The animation system also includes hinged flaps and spoilers, engine-fan movement and external lighting. An arrival’s position and orientation are derived from its progress along a smooth approach path.
+
+“A separate ambient departure state machine can show an aircraft parked at a stand, pushed back by a tractor, starting its engines, taxiing, waiting short of the runway, lining up, accelerating, rotating and climbing away. It checks the simulated arrival/runway situation before proceeding.
+
+“This makes the airport feel operational, but the motion is scripted and kinematic. It is not an aerodynamic flight simulator or a connection to actual aircraft telemetry.”
+
+## 21. Riverside — water, banks, bridges and urban life
+
+**Show:** Choose Riverside and inspect the water and city from several angles.
+
+**Say:**
+
+“The water system includes a winding river with changing width, one larger lake and three ponds. Their irregular boundaries avoid the appearance of rectangular river strips and identical circular basins.
+
+“A shared shoreline model drives the water geometry, terrain carving and material shading. That consistency matters: the bank, wet ground and water surface need to agree on where the shoreline actually is.
+
+“Depth changes the water’s colour. Shallow areas show more sediment colour, while deeper areas become darker. Layered wave normals create long waves, smaller ripples and wind-driven chop.
+
+“Reflection changes with the viewing angle. The shader combines a sky reflection with a separate mirrored rendering of nearby buildings and banks, when the reflection effect is enabled. Wave normals distort that reflected image.
+
+“The water also supports sun glints, shoreline ripples and boat wakes. Nearby hulls contribute bow waves, foamy propeller wash and spreading wake arms.
+
+“The surrounding city combines taller buildings, mid-rise blocks, smaller houses, pitched roofs, streets, bridge crossings, lamps and a riverside promenade. Docks, shoreline vegetation and boats help establish scale.
+
+“This water is an optical and geometric approximation for real-time rendering. It does not run a full fluid-dynamics simulation.”
+
+## 22. The wider world — countryside, infrastructure and life
+
+**Show:** Explore the wider scene from Approach, Airport and Riverside.
+
+**Say:**
+
+“The landscape extends beyond the airport. It includes rolling fields, hills, distant mountains, woods and parcels of farmland.
+
+“Tree placement shares a density model with the distant forest colour, helping a woodland look consistent as the camera moves. Species include oak, birch, pine, spruce, poplar and hedges. Near trees receive more detailed foliage; distant trees use simpler or thinned representations.
+
+“The field system aligns visible boundaries, hedgerows and farming details. Depending on viewpoint and distance, the scene includes barns, grain silos, hay bales, wrapped silage, cattle and sheep. Birds add motion above the fields and water.
+
+“Villages add pitched roofs, chimneys, high streets and church landmarks. Other infrastructure includes wind turbines, a solar farm, transmission pylons, radio masts and a water tower.
+
+“The motorway includes separate carriageways, lane markings, barriers, guardrails, lighting and sign gantries. Vehicles follow the same rounded route used to build its geometry.
+
+“The electrified railway includes tracks, ballast, catenary equipment, stations and platforms. Regional trains follow schedules along it. Industrial areas add distribution sheds, loading docks, tanks, chimneys and cooling-tower steam.
+
+“These objects enrich the environment. A wind turbine drawn in the landscape is not evidence that the cloud server is powered by that turbine; the software’s carbon report is calculated separately.”
+
+## 23. Flight board — search, filters, strips and recent outcomes
+
+**Show:** Restore the flight board. Search by part of a call sign, title and pilot. Clear the query. Try each filter and expand recent flights.
+
+**Say:**
+
+“The flight board is the quickest way to find a delivery change.
+
+“Search matches the flight ID, change title and pilot name. It ignores letter case. With multiple words, every search term must appear somewhere in that combined text. The slash key focuses the search box when we are not already typing in another input.
+
+“All flights shows the current board. In the air keeps active and holding flights. Holding focuses on flights in a holding phase. The holding badge shows the total holding count, while the visible list also respects our search.
+
+“Active flights are sorted by progress, helping us find the changes furthest along the approach.
+
+“Each strip shows the flight ID, clearance or Assessing state, title, pilot and risk percentage. A diamond distinguishes an agent pilot from the human-style circular mark. Hover text can reveal the full pilot name and trust.
+
+“The nine small stage cells summarise progress. Their labels and tooltips distinguish pending, active, passed, failed and skipped work. The bottom line describes the current situation, such as awaiting approval or canary at a particular traffic percentage.
+
+“Recently on the ground expands recent non-active outcomes, up to eight in this view. It is useful for revisiting a landing, diversion or go-around. A search opens that history area automatically when there are matching results.
+
+“If nothing matches, the board explains the empty state rather than inventing a result.”
+
+## 24. Bottom instruments, activity feed and time formats
+
+**Show:** Point to all four instruments and the activity rows.
+
+**Say:**
+
+“Error budget shows how much reliability allowance remains. The note can say Healthy, Tightened or Frozen, and the track makes the remaining amount visible.
+
+“This is an SLO error budget, not the Google Cloud spending budget. In the public preview its value comes from the simulator; in live mode the Tower can derive it from its service metrics.
+
+“Active flights counts the current airborne and holding delivery flights. It is not a count of every decorative aircraft in the 3D world.
+
+“Autonomous shows how many of the recent assessed flights received autonomous clearance. The denominator is drawn from up to 24 recent assessed flights, rather than an all-time percentage of every run.
+
+“Carbon intensity shows the available mean Software Carbon Intensity per change.
+
+“The activity feed shows the two latest events in the current snapshot. Clicking a flight identifier opens its inspector. Event times ending in Z are UTC. Relative times such as seconds or minutes ago express elapsed time.
+
+“A dash means that a value is not available yet. It should not be read as a measured zero.”
+
+## 25. Flight inspector — identity and clearance
+
+**Show:** Select an available flight. If its details are incomplete, choose a recent completed flight for the full walkthrough.
+
+**Say:**
+
+“Selecting a strip or aircraft opens the flight inspector at a shareable flight URL.
+
+“The header contains the flight ID, clearance chip and, for generated examples, a Simulated badge. The title explains the actual change. The pilot line can include current trust and the clean-landing streak, followed by the flight’s status.
+
+“The close icon and Back to flight board both return to the board. When a real merge-request URL is available, Open merge request in GitLab provides the source-of-record link.
+
+“The Clearance section places the change’s risk on a scale beside the effective autonomous, supervised and assisted thresholds. The thresholds can shift with the error budget and trust; they are not necessarily the policy’s unscaled base values.
+
+“The written reasons explain the result. Below them, Pipeline identifies the verification tier, Approvals gives the encoded approval requirement, Canary plan lists traffic steps and Bake per step shows the observation time per step.
+
+“If the change has not been assessed, this section says that clearance will arrive after assessment.”
+
+**Presenter note:** The current decision object encodes approvals as 0 for autonomous, 1 for supervised and 2 for assisted/hold. A Holding decision is not a promise that any two people can override governance. Actual project permissions and code-owner rules remain relevant.
+
+## 26. Flight inspector — risk and stage timeline
+
+**Show:** Scroll through Risk and Stages.
+
+**Say:**
+
+“Risk shows the total score, its descriptive band and the contributing signals. Each signal has a bar, a percentage and an explanation.
+
+“The eight possible signals are sector criticality, change size, blast radius, test gap, dependency changes, irreversible changes, critical file deletions and security findings. Signals that do not apply may be absent.
+
+“Their combination is noisy-OR: risk equals one minus the product of one minus each signal. For example, two signals at ten and twenty percent combine to twenty-eight percent, not thirty percent.
+
+“These values are a transparent policy model built from heuristics. They should not be presented as a statistically validated prediction that precisely this percentage of comparable changes will cause incidents.
+
+“The Stages timeline then lists all nine delivery stages, with status, detail and timestamp where available. A job link appears when the event includes a real job URL.
+
+“That makes the strip useful for scanning and the inspector useful for understanding exactly which stage or rule needs attention.”
+
+## 27. Flight inspector — canary, carbon, evidence and agent activity
+
+**Show:** Find a completed flight with these sections. Use a go-around example for the failed checks if one is available.
+
+**Say:**
+
+“The Canary section appears when canary data exists. During observation it can show the traffic percentage. After analysis it shows Promoted, Rolled back or Extended.
+
+“The comparison places baseline and candidate error rates and p95 latency beside each other. The checks explain sample sufficiency, error regression, latency regression and budget burn.
+
+“Carbon appears when the flight has an SCI report. It shows the estimated carbon for the change, energy in watt-hours, modelled region and work avoided compared with the fixed verification baseline.
+
+“Evidence shows the record count, chain-head hash, signature status and control references. In the live implementation, records can be hashed and the chain head authenticated with an HMAC.
+
+“The current simulator creates illustrative evidence metadata, including the displayed hash and signed flag. Those badges should not be used as proof that this simulated flight has a real signed GitLab evidence artifact.
+
+“Agent activity lists the recorded actions in reverse order, with the agent, action, relative time and optional detail. In live integration these actions come from the project record; in this preview they are generated scenario events.
+
+“Sections appear only when their corresponding data is present. An early flight may legitimately have no canary, carbon or evidence section yet.”
+
+## 28. Trust ledger — every value and marker
+
+**Show:** Open Trust ledger. Point to a pilot row, bar markers, counts and the expandable method explanation.
+
+**Say:**
+
+“The trust ledger explains what each pilot has earned.
+
+“Each row identifies the pilot and shows the conservative trust percentage. The filled bar represents that trust value. A thin marker represents the mean estimate, while the threshold marker shows the minimum trust needed for autonomy, currently fifty-five percent.
+
+“The counts include recorded flights, clean landings, go-arounds or incidents, and the current clean streak. The status indicates whether the pilot has earned autonomy or estimates how many additional clean landings would be needed under the model’s assumptions.
+
+“Earning that threshold does not make every change autonomous. The change still needs to fit its risk allowance, available error budget and hard policy conditions.
+
+“The model starts with a Beta belief using two success-weight units and three failure-weight units. Its mean begins at forty percent, but the conservative trust value begins around fourteen percent.
+
+“A clean landing adds success weight of zero point five plus the flight’s risk. A go-around adds failure weight of one point five minus risk. An incident after promotion adds twice that failure weight. Recent difficult successes therefore count more, while an easy failure is especially informative.
+
+“Historical contributions decay with a thirty-day half-life. The implementation approximates a one-sided ninety-percent lower bound using the mean and standard deviation. It does not evaluate an exact inverse Beta distribution.
+
+“The public preview seeds a history so the ledger can demonstrate different pilot states. Those records are not earned real-world Duo outcomes.”
+
+## 29. Carbon report — all charts and the model boundary
+
+**Show:** Open Carbon. Explain the two headline values, flight bars, legend, region comparison and runtime paragraph.
+
+**Say:**
+
+“The Carbon report asks how much delivery work a change consumed and what adaptive verification avoided.
+
+“The first headline is mean carbon dioxide equivalent per change shipped. The second is the estimated proportion avoided compared with the fixed, fuller verification baseline.
+
+“The formula is SCI equals E times I plus M, divided by R. E is energy, I is the electricity grid’s carbon intensity, M is the allocated embodied emissions of hardware and R is the functional unit: one delivered change.
+
+“The recent-flight chart shows up to twelve flights with SCI data. One segment represents estimated emissions from work performed; the other represents estimated work avoided. The avoided segment is a counterfactual comparison, not carbon removed from the atmosphere.
+
+“Where the work runs compares six configured regions: South Carolina, Iowa, Belgium, Oregon, Finland and Montréal. The bars use carbon-intensity coefficients stored in the application. They are not a live electricity-grid feed, and clicking the chart does not move the service to another region.
+
+“The runtime paragraph describes the Tower’s region, modelled carbon per thousand requests and measured process CPU utilisation. The pipeline region and the Tower region can differ.
+
+“The energy calculation models CPU and memory power, utilisation and data-centre overhead. Hardware emissions are allocated using assumed server lifetime and capacity. Real GitLab job durations can be read when live integration is configured; otherwise catalogue estimates are used.
+
+“The preview’s flight figures are synthetic. Even with real durations, power remains modelled. LLM inference, the viewer’s GPU and network/device energy are outside the current boundary. These numbers should be described as bounded estimates, not a complete measured footprint of the product.”
+
+## 30. Governor playground — all inputs and output fields
+
+**Show:** Open Governor. Point to every preset, file-table column, control and output area.
+
+**Say:**
+
+“The Governor playground lets us change an example and immediately see how Clearance would assess it.
+
+“The six presets are Docs fix, Console tweak with tests, Untested engine rewrite, Dependency upgrade, Agent edits its own policy and Database migration.
+
+“The file table accepts a path, lines added and lines removed. The remove button deletes that example row, and Add a file adds another row. These controls change the hypothetical input, not files in the actual repository.
+
+“Pilot selects agent or human. Earned trust moves from zero to one hundred percent. Error budget left changes the reliability context. Scanner findings can be none, a high-severity SAST finding, a critical dependency vulnerability or a leaked token.
+
+“The decision updates in the browser using the same risk and governor modules used by the CLI. The app fetches the project policy and sector map; default values provide a fallback before that request completes.
+
+“The result includes the clearance level, numerical risk, risk band, threshold scale, written reasons and individual signals. The facts list names the planned verification jobs, jobs skipped against the fuller baseline, the canary steps and bake time, and the approval count.
+
+“This is a what-if tool. Raising trust here does not update a pilot’s actual ledger, and choosing Human does not grant the visitor code-owner privileges.”
+
+**Presenter note:** Presets replace the file list only. They do not reset the pilot, trust, error-budget slider or scanner findings. Before comparing presets, restore agent, 66% trust, 80% budget and no findings.
+
+## 31. Governor demonstration — six presets and safety boundaries
+
+**Show:** With project policy loaded, use agent, 66% trust, 80% budget and no findings. Explain outcomes rather than promising they stay identical after policy changes.
+
+**Say:**
+
+“Docs fix touches a non-runtime documentation sector. With no hard hold, it receives an autonomous taxi path: there is verification work, but nothing to deploy.
+
+“Console tweak with tests is a small runtime change accompanied by tests. With these inputs it receives autonomous clearance and a lean pipeline.
+
+“Untested engine rewrite touches more critical runtime sectors, changes more code and lacks matching tests. Under the current policy and these inputs it receives supervised clearance with the full verification tier.
+
+“Dependency upgrade touches build manifests. That adds dependency risk and receives supervised clearance in this example.
+
+“Agent edits its own policy is the clearest hard boundary. It is held because the author is an agent modifying protected governance. Raising trust does not remove that hard hold. Its verification tier can still say taxi because the file is non-runtime; Holding remains the clearance outcome.
+
+“Database migration adds an irreversible-change signal. That signal raises risk, but the current governor does not categorically hold every migration. At these exact settings it can still fall inside the trust-adjusted autonomous allowance. We should explain the result that the engine actually returns, rather than claim a universal migration ban that is not encoded.
+
+“Now lower trust. A runtime change that fit the allowance can become supervised because the pilot has not earned autonomy. Lower the error budget and the thresholds shrink. Finally choose a critical vulnerability or leaked token: those are configured hard holds, regardless of an attractive trust score.
+
+“A high-severity SAST finding adds risk but is not the same categorical rule as a critical finding or detected secret. The reason list tells us which mechanism produced the result.”
+
+**Calculated reference, after project policy loads, for the settings above:**
+
+| Preset | Risk | Clearance | Verification tier |
+|---|---:|---|---|
+| Docs fix | 0.25% | Autonomous | taxi |
+| Console tweak with tests | 10.29% | Autonomous | lean |
+| Untested engine rewrite | 46.52% | Supervised | full |
+| Dependency upgrade | 42.12% | Supervised | standard |
+| Agent edits its own policy | 18.73% | Holding | taxi |
+| Database migration | 35.91% | Autonomous | standard |
+
+These are calculations from the deployed source and checked-in policy, not captured live-flight measurements. The interface rounds some values.
+
+## 32. Decision engine — risk, allowance and error budget in depth
+
+**Show:** Keep the Governor result open while explaining its inputs.
+
+**Say:**
+
+“Files are assigned to the first matching sector. Protected governance is most critical. Other sectors include pipeline configuration, infrastructure, the decision engine, Tower/API code, the console, tests and documentation. Unmatched paths use the configured default criticality.
+
+“Sector criticality weights the sensitivity of the location. Change size considers churn, with shipped code weighted more heavily than non-runtime work. Blast radius considers distinct runtime sectors and broad file spread. Test gap compares test changes with shipped-code changes and can incorporate supplied coverage. Manifest changes add dependency risk. Irreversible paths add their own signal. Deleting a whole critical file differs from merely editing some lines. Scanner findings contribute according to severity.
+
+“The risk bands are minimal below ten percent, low below twenty-five, elevated below forty-five, high below seventy and severe from seventy upward. A band describes risk; it is not itself the final autonomy level.
+
+“Hard holds are checked before ordinary threshold comparisons. They include agent changes to protected governance, critical vulnerabilities, detected secrets, applicable freeze windows and an exhausted error budget for ordinary changes.
+
+“For eligible runtime changes, the base autonomous ceiling is thirty-five percent and minimum trust is fifty-five percent. Trust above that minimum gives a modest allowance bonus. The allowance also shrinks when reliability budget is low.
+
+“At sixty-six percent trust and healthy budget, that calculation gives roughly a 36.9-percent autonomous allowance. Supervised and assisted base ceilings are seventy and ninety percent.
+
+“Below fifty percent remaining error budget, the budget factor tightens autonomy. At or below ten percent, ordinary changes hold. The engine recognises fixes and reverts by title or labels and can allow them under constrained supervision; the playground does not expose every one of those backend inputs.
+
+“The same change can therefore receive a different clearance because its pilot or service context changed, while identical full inputs produce the same deterministic decision.”
+
+## 33. Canary mathematics — exactly what causes a rollback
+
+**Show:** Use a flight’s Canary section or explain beside the Monitor chapter.
+
+**Say:**
+
+“The current policy asks for at least two hundred requests per revision before promotion can rely on the comparison.
+
+“For errors, the engine uses a one-sided two-proportion z-test and requires a practical increase as well as statistical significance. The current limits are p below 0.05 and an error-rate increase greater than one percentage point.
+
+“For latency, it uses a one-sided Mann–Whitney U test on raw latency samples together with a p95 ratio guard. The current ratio threshold is 1.25, meaning the candidate’s p95 is more than twenty-five percent above baseline.
+
+“The burn-rate check compares the candidate error rate with the allowance implied by the 99.5-percent SLO. A burn rate of at least 14.4 times, with at least five observed errors, can trigger rollback even before the normal request minimum is reached.
+
+“If a failing condition is found, the verdict is rollback. If no failing condition is found but traffic is insufficient, the verdict is extend. Otherwise it is promote.
+
+“The default autonomous canary steps are twenty-five, fifty and one hundred percent, with a 120-second bake per step. Supervised uses ten, twenty-five, fifty and one hundred percent with 300 seconds per step. Assisted uses five, twenty-five, fifty and one hundred percent with 600 seconds per step.
+
+“Those are policy values for the delivery workflow. The public simulator compresses the demonstration and supplies synthetic samples; waiting briefly on the website is not a real production bake.”
+
+## 34. Frontend, routing and real-time data flow
+
+**Show:** Move between tabs and a flight detail without reloading the entire page.
+
+**Say:**
+
+“The interface is written in TypeScript and React-compatible TSX. The production bundle uses Preact’s compatibility layer, with React import aliases resolving to one browser runtime.
+
+“The app uses a small History API router instead of a separate routing library. Its primary routes are home, tower, ledger, carbon, governor and a flight-detail route containing the selected ID.
+
+“One persistent Scene component owns the WebGL canvas. Page panels and camera settings change around that scene.
+
+“The browser receives a server-sent event stream using EventSource. A hello event supplies the initial snapshot. Flight, tape, ledger, remove and pulse events update the local projection. Updates are batched through animation frames before notifying subscribed UI components.
+
+“If the event stream repeatedly fails, after four failures the client switches to fetching the state every five seconds. That connection status is separate from whether the server is using simulated or GitLab traffic.
+
+“The client keeps a recent working set rather than presenting unlimited history. Its flight list is capped at sixty, the activity tape at eighty, while individual panels show smaller slices.”
+
+## 35. Rendering engine — geometry, water, light and camera effects
+
+**Show:** Use a wide scenic view, then a close aircraft or low water view.
+
+**Say:**
+
+“The world uses a custom WebGL2 renderer. It is not a pre-rendered video and does not use Three.js, Babylon.js or a game-engine runtime.
+
+“The scene is built from procedural meshes, shader-generated surface detail, instanced objects and a small set of generated textures. Runway lettering, aircraft branding and leaf sprays are examples of textures created in code; the scene is not literally texture-free.
+
+“Instancing lets many similar trees, buildings or vehicles reuse geometry while receiving different positions, sizes and colours. Spatial cells, camera-frustum tests and distance limits reduce work that will not contribute to the image.
+
+“The lighting system includes a shared dusk sky, sun direction, atmospheric fog and three cascaded shadow regions. Those cascades reserve more shadow detail near the subject while covering a wider landscape farther away.
+
+“Where supported, the scene renders into a high-dynamic-range target with multisampling, normally requesting four samples. Bloom extracts bright light, downsamples and upsamples it, then combines it with the main image. ACES-style tone mapping brings the result into display range.
+
+“Additional effects include sun rays, screen-space ambient occlusion and selective depth of field. Reflections use a bounded lower-resolution mirrored pass, rather than rendering a second full-resolution scene every frame.
+
+“The water’s Fresnel response makes reflections stronger at glancing angles. Depth-based attenuation, animated normals, sun sparkle and wake foam give the surface more variation than a flat transparent blue plane.
+
+“Aircraft follow a Catmull–Rom approach curve and separate holding/go-around paths. Camera movement is damped for smooth transitions, and aircraft labels are projected back into HTML positions with simple overlap avoidance.”
+
+## 36. Performance, accessibility and responsive behaviour
+
+**Show:** Resize the browser or demonstrate on a phone. Use the expanded flight board.
+
+**Say:**
+
+“The renderer limits device-pixel ratio and watches slow frames. If sustained performance is poor, it first reduces resolution, then disables expensive effects such as ambient occlusion, depth of field, reflections and near grass. Its detail level is therefore allowed to differ across devices.
+
+“Animation rendering pauses when the document is hidden. The application also respects reduced-motion preferences by reducing or disabling non-essential movement and flashing effects. If WebGL2 cannot initialise, a background fallback can remain while the HTML interface continues to work.
+
+“On smaller screens, panels become lower-screen or expanded reading surfaces. Some secondary labels and the activity feed are hidden, aircraft tags are reduced, and the Governor receives more space for its controls. Inputs stack into a single column on the narrowest layouts.
+
+“The interface includes named navigation regions, labelled camera controls, focus indicators, pressed-state information, accessible input labels and textual stage descriptions. Selecting and closing a flight also attempts to manage focus sensibly.
+
+“These measures improve usability, but they are not a claim that the site has completed a formal accessibility audit.
+
+“The production bundle checked in readiness is about 146 KiB gzipped for the measured JavaScript, CSS and HTML, against a 160 KiB budget. That figure excludes external font responses and does not measure the GPU cost of rendering the scene.”
+
+## 37. Tower server, API and MCP tools
+
+**Show:** If presenting to a technical audience, show this list alongside the site rather than exposing credentials.
+
+**Say:**
+
+“The Tower is one Node.js HTTP process. It serves the browser app, event stream, REST endpoints, webhooks, metrics and MCP. It does not need Express or a runtime npm dependency tree.
+
+“The read endpoints expose health, state, flights, an individual flight, trust ledger, error budget, carbon and policy. POST api/assess provides a server-side assessment API, although the interactive Governor component itself calculates its result in the browser.
+
+“CI can submit events to POST api/events with a bearer token. GitLab webhooks use a separate webhook secret. These authenticated writes are rejected when valid credentials are missing.
+
+“The MCP endpoint uses JSON-RPC over HTTP. Its eight tools are assess_change, get_flight, list_flights, trust_ledger, error_budget, explain_policy, analyze_canary and carbon_report.
+
+“Those tools query state or calculate an assessment. They are not tools that directly merge or deploy changes. GitLab workflows and project permissions control those actions.
+
+“The server also exports Prometheus-style request, error and duration metrics, along with CPU measurements. A probe endpoint provides representative work for the canary analysis path.”
+
+**API reference for the presenter:**
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Health, revision and current mode |
+| `GET /api/state` | Console snapshot |
+| `GET /api/stream` | Server-sent event stream |
+| `GET /api/flights` | Recent flight projections |
+| `GET /api/flights/:id` | One flight and its activity tape |
+| `GET /api/ledger` | Pilot summaries and ledger entries |
+| `GET /api/budget` | Remaining error budget and alert context |
+| `GET /api/carbon` | Flight and runtime SCI estimates |
+| `GET /api/policy` | Policy, sector map and YAML snapshots |
+| `POST /api/assess` | Validated, rate-limited assessment |
+| `POST /api/events` | Token-protected CI event ingestion |
+| `POST /webhooks/gitlab` | Secret-checked GitLab notifications |
+| `POST /mcp` | MCP tool discovery and calls |
+| `GET /metrics` | Prometheus-format metrics |
+| `GET /api/probe` | Representative canary probe workload |
+
+## 38. GitLab architecture, persistence and evidence security
+
+**Show:** Return to a flight and explain how it would connect to GitLab.
+
+**Say:**
+
+“In live mode, GitLab is intended to be the durable source of record. The Tower builds a projection from merge requests, pipelines, notes, black-box records and the trust ledger. It periodically synchronises and can use webhooks to refresh affected flights sooner.
+
+“The repository’s design stores flight black boxes, trust-ledger data and evidence packs in the GitLab package registry, with links and release information in the relevant project records. The current hosted preview instead uses in-memory simulated state, which can restart when the Cloud Run instance restarts.
+
+“The evidence chain includes each record’s content and the previous record’s hash. Verification recomputes those links. An optional HMAC authenticates the head using a secret key.
+
+“This is tamper-evident evidence under the integrity and key-management assumptions. It is not a blockchain, and HMAC is not a public-key signature. Someone who controls both the records and the signing key could regenerate a valid chain.
+
+“Control references such as SOC 2 CC8.1, ISO 27001 change-management controls and NIST SSDF provenance controls identify what a record may help evidence. Their presence does not certify the software or organisation as compliant.
+
+“The server applies a Content Security Policy and other browser headers, validates request bodies, limits request sizes and rate-limits assessment and ingestion paths. Token comparisons use timing-safe comparison. A separate optional MCP token can protect that interface when configured.
+
+“The current deployment intentionally contains no live GitLab credentials. Secrets and production access must be configured deliberately before the preview can become a live operational console.”
+
+## 39. Google Cloud deployment and what has actually been verified
+
+**Show:** Use the public website URL. Optionally show the Cloud Run service page if already signed in.
+
+**Say:**
+
+“This website is deployed in the separate Google Cloud project clearance-tower-20261020, in the Montréal region, northamerica-northeast1.
+
+“Cloud Build created the container and Artifact Registry stores it. Cloud Run serves the pinned image revision over HTTPS. The runtime is a distroless Node.js container running as a non-root user.
+
+“The service is configured with one CPU, 512 MiB of memory, zero minimum instances and a maximum of one instance. CPU allocation is request-based. The request timeout is five minutes, so long-lived event connections may need to reconnect.
+
+“The runtime service account was created without cloud IAM roles. A separate build identity has access to its private source bucket, image repository and build logs.
+
+“The deployment’s recorded checks cover health, simulated state, the public tower page and security headers, compressed JavaScript, the event stream and rejection of unauthenticated event and webhook writes.
+
+“The latest complete recorded local readiness run passed 135 tests, plus type, build, bundle, documentation and server smoke checks. Those are local checks, not evidence that 135 jobs ran on GitLab.
+
+“Scale-to-zero reduces idle service usage, but active requests, builds and storage can still incur charges. A one-instance limit is not a fixed monetary budget.”
+
+## 40. Closing narration
+
+**Show:** Return to Approach, keep the flight board visible, then briefly revisit Governor and Trust ledger.
+
+**Say:**
+
+“Clearance brings delivery state and delivery permission into one view.
+
+“The 3D airspace explains where a change is. The flight inspector explains what happened. The governor explains why it may proceed. The trust ledger explains what its pilot has earned. The carbon report explains the footprint model and avoided verification work.
+
+“The public app demonstrates those concepts with simulated traffic and implemented decision logic. The next integration milestone is to connect real GitLab Duo sessions, pipeline history and delivery evidence.
+
+“The central idea is that autonomy should be earned through observed outcomes and constrained by explicit policy. Every change asks for clearance, and the system keeps the reason for its answer visible.”
+
+---
+
+## Presenter checklist — details that are easy to miss
+
+- Start at `/`, because a tour beginning at `/tower` misses the entire landing-page story.
+- Describe both data mode and connection state; they answer different questions.
+- Open recent completed flights to reveal sections absent on new flights.
+- Demonstrate slash-to-search, multiword search and the three filters.
+- Show both panel expansion and world expansion, then restore them.
+- Select a flight before trying Follow flight.
+- Explain that scenic cameras intentionally hide aircraft tags.
+- Show the ledger’s mean marker and minimum-trust marker separately.
+- Expand “How trust is computed.”
+- Explain the carbon chart’s emitted/avoided legend and static region coefficients.
+- Reset Governor sliders and findings between comparisons; presets change only files.
+- Use the policy-edit example for an unambiguous agent hard hold.
+- Explain that migration risk is not a categorical migration hold in the current engine.
+- Identify synthetic evidence metadata rather than treating a signed badge as real artifact proof.
+- Do not equate a pilot commit trailer with cryptographic commit signing.
+- Do not describe modelled SCI as complete measured lifecycle emissions.
+- Do not describe the fictional world as a geospatial reconstruction or actual aviation telemetry.
+- Describe timestamps ending in Z as UTC.
+- Treat decorative cars, trains, boats, birds and departures as ambient scene elements.
+- Keep real live-workflow claims tied to actual issue, session, MR, pipeline, release and incident links.
+
+## Source map used to prepare this walkthrough
+
+- Routes and persistent scene: `src/web/App.tsx`.
+- Homepage narrative and chapter navigation: `src/web/ui/Landing.tsx`.
+- Header, cameras, instruments and activity: `src/web/ui/Console.tsx`.
+- Search, filters and strips: `src/web/ui/Strips.tsx`, `src/web/ui/flights.ts`.
+- Flight detail sections: `src/web/ui/FlightDetail.tsx`.
+- Ledger, Carbon and Governor: their matching files under `src/web/ui/`.
+- Real-time client and router: `src/web/state.ts`.
+- Scene bridge and projected tags: `src/web/ui/Scene.tsx`.
+- Renderer, camera and scene animation: `src/web/engine/airspace.ts`.
+- Water boundaries and reflection: `src/web/engine/world/hydrology.ts`, `src/web/engine/reflection.ts`.
+- Lighting, water and post-processing shaders: `src/web/engine/shaders.ts`.
+- Airport, city, countryside, vehicles and animals: `src/web/engine/world/` and `src/web/engine/models/`.
+- Risk, governor, trust, canary, pipeline, SCI and evidence: matching modules under `src/core/`.
+- HTTP, MCP, simulator and GitLab projection: `src/tower/`.
+- Actual deployment checks: `docs/proof/cloud-deployment.json`.
+- Recorded local checks: `docs/proof/readiness.json`.
+
+This script describes the inspected implementation and recorded deployment. It does not assert that a new browser inspection, real Duo session or new full test run occurred while writing it.

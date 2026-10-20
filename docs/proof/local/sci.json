@@ -1,0 +1,78 @@
+{
+  "region": "us-east1",
+  "intensity": 579,
+  "functionalUnit": "one change shipped to production",
+  "jobs": [
+    {
+      "name": "docs:links",
+      "durationSec": 20,
+      "energyKwh": 0.00005,
+      "operationalG": 0.0287,
+      "embodiedG": 0.006,
+      "totalG": 0.0347
+    },
+    {
+      "name": "test:impacted",
+      "durationSec": 35,
+      "energyKwh": 0.000087,
+      "operationalG": 0.0502,
+      "embodiedG": 0.0105,
+      "totalG": 0.0607
+    },
+    {
+      "name": "build:web",
+      "durationSec": 40,
+      "energyKwh": 0.000099,
+      "operationalG": 0.0574,
+      "embodiedG": 0.012,
+      "totalG": 0.0694
+    },
+    {
+      "name": "test:unit",
+      "durationSec": 70,
+      "runner": "saas-linux-small-amd64",
+      "status": "avoided",
+      "energyKwh": 0.000173,
+      "operationalG": 0.1004,
+      "embodiedG": 0.0211,
+      "totalG": 0.1215
+    },
+    {
+      "name": "typecheck",
+      "durationSec": 55,
+      "runner": "saas-linux-small-amd64",
+      "status": "avoided",
+      "energyKwh": 0.000136,
+      "operationalG": 0.0789,
+      "embodiedG": 0.0166,
+      "totalG": 0.0954
+    },
+    {
+      "name": "test:smoke",
+      "durationSec": 50,
+      "runner": "saas-linux-small-amd64",
+      "status": "avoided",
+      "energyKwh": 0.000124,
+      "operationalG": 0.0717,
+      "embodiedG": 0.0151,
+      "totalG": 0.0868
+    },
+    {
+      "name": "test:soak",
+      "durationSec": 150,
+      "runner": "saas-linux-small-amd64",
+      "status": "avoided",
+      "energyKwh": 0.000372,
+      "operationalG": 0.2151,
+      "embodiedG": 0.0452,
+      "totalG": 0.2603
+    }
+  ],
+  "energyKwh": 0.000236,
+  "operationalG": 0.1363,
+  "embodiedG": 0.0285,
+  "sci": 0.1648,
+  "baselineG": 0.7288,
+  "avoidedG": 0.564,
+  "avoidedPct": 0.7739
+}

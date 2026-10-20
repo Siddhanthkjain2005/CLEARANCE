@@ -1,0 +1,66 @@
+{
+  "schema": "clearance.readiness/v1",
+  "createdAt": "2026-10-20T12:58:11.209Z",
+  "localReady": true,
+  "submissionReady": false,
+  "tests": {
+    "count": 135,
+    "passed": 135
+  },
+  "bundle": {
+    "totalGzipBytes": 149501,
+    "budgetKb": 160,
+    "files": 3
+  },
+  "checks": [
+    {
+      "name": "types",
+      "passed": true,
+      "code": 0,
+      "durationMs": 5355,
+      "log": ".clearance-out/readiness/types.log"
+    },
+    {
+      "name": "tests",
+      "passed": true,
+      "code": 0,
+      "durationMs": 10711,
+      "log": ".clearance-out/readiness/tests.log"
+    },
+    {
+      "name": "build",
+      "passed": true,
+      "code": 0,
+      "durationMs": 229,
+      "log": ".clearance-out/readiness/build.log"
+    },
+    {
+      "name": "bundle",
+      "passed": true,
+      "code": 0,
+      "durationMs": 147,
+      "log": ".clearance-out/readiness/bundle.log"
+    },
+    {
+      "name": "docs",
+      "passed": true,
+      "code": 0,
+      "durationMs": 140,
+      "log": ".clearance-out/readiness/docs.log"
+    },
+    {
+      "name": "smoke",
+      "passed": true,
+      "code": 0,
+      "durationMs": 1246,
+      "log": ".clearance-out/readiness/smoke.log"
+    }
+  ],
+  "external": {
+    "gitlabWorkspace": "Pending hackathon workspace provisioning",
+    "liveDuoWorkflow": "Not run; local mock evidence is not a live Duo session",
+    "cloudDeployment": "Hosted preview is recorded separately in docs/proof/cloud-deployment.json; this local check does not verify live deployment reachability",
+    "youtubeVideo": "Pending final recording of real workflow and upload",
+    "devpostSubmission": "Pending owner registration and completed submission"
+  }
+}

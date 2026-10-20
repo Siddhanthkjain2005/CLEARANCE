@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "clearance": {
+      "type": "http",
+      "url": "https://YOUR-TOWER-URL/mcp",
+      "approvedTools": [
+        "assess_change",
+        "get_flight",
+        "list_flights",
+        "trust_ledger",
+        "error_budget",
+        "explain_policy",
+        "analyze_canary",
+        "carbon_report"
+      ]
+    },
+    "clearance-local": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "approvedTools": true
+    }
+  }
+}

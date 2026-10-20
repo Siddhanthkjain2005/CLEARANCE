@@ -1,0 +1,66 @@
+{
+  "schema": "clearance.cloud-deployment/v1",
+  "verifiedAt": "2026-10-20T10:11:30.354790+00:00",
+  "project": "clearance-tower-20261020",
+  "region": "northamerica-northeast1",
+  "service": "clearance-tower",
+  "url": "https://clearance-tower-30123867341.northamerica-northeast1.run.app",
+  "canonicalUrl": "https://clearance-tower-s2dwruajra-nn.a.run.app",
+  "revision": "clearance-tower-r6247c2ffeab2",
+  "trafficPercent": 100,
+  "mode": "simulated",
+  "liveGitLabConnected": false,
+  "buildId": "c8e4ecbc-724c-45e4-8027-173dda6d0376",
+  "sourceSha256": "6247c2ffeab2f224bfccb4cd13a4ffe6b501c7175a7e1cdb231a608d49820051",
+  "imageDigest": "sha256:90229ae6a66df10aab54df3b266c87bb2f6252aa1e541df00f1d46214c4e668b",
+  "runtimeServiceAccount": "clearance-tower@clearance-tower-20261020.iam.gserviceaccount.com",
+  "limits": {
+    "minInstances": 0,
+    "maxInstances": 1,
+    "cpu": 1,
+    "memory": "512Mi",
+    "requestBasedCpu": true,
+    "requestTimeoutSeconds": 300
+  },
+  "visualInspection": "Unavailable: local browser use disabled in Work settings",
+  "checks": [
+    {
+      "name": "health",
+      "passed": true,
+      "response": {
+        "ok": true,
+        "revision": "clearance-tower-r6247c2ffeab2",
+        "mode": "simulated"
+      }
+    },
+    {
+      "name": "state",
+      "passed": true,
+      "mode": "simulated"
+    },
+    {
+      "name": "public tower page and security headers",
+      "passed": true
+    },
+    {
+      "name": "production JavaScript asset with gzip",
+      "passed": true,
+      "asset": "/app-N47RZDXI.js",
+      "bytes": 135046
+    },
+    {
+      "name": "unauthenticated write rejected /api/events",
+      "passed": true,
+      "status": 401
+    },
+    {
+      "name": "unauthenticated write rejected /webhooks/gitlab",
+      "passed": true,
+      "status": 401
+    },
+    {
+      "name": "live event stream",
+      "passed": true
+    }
+  ]
+}
