@@ -1,36 +1,35 @@
-# Final demo storyboard — target 2:40
+# Product walkthrough — suggested 2:40
 
-The final recording must show real GitLab Duo execution. Local simulations are useful rehearsal footage, but are not a substitute for the required workflow proof. Keep a persistent label on any simulated or mocked segment.
+Use this timing as a starting point. Demonstrate the published interface and keep its simulated-traffic label visible. Adjust the pace to leave important text readable.
 
-## Prepare before recording
+## Prepare
 
-1. Complete account onboarding and the live evidence register in [submission-status.md](../hackathon/submission-status.md).
-2. Run `node scripts/check-readiness.ts`; capture the actual successful results.
-3. Prepare one small runtime intent, its real Duo session and resulting MR, plus one controlled canary-failure run. Use genuine trust history; a new pilot begins supervised.
-4. Open the issue, session, MR, pipeline, release, incident and console tabs. Put the relevant proof on screen before describing it.
-5. Record in 16:9, preferably 1920×1080. Use English narration/captions and no copyrighted music. A clear AI narration is allowed by the event resources.
-6. Record actual actions and results over as long as needed, then edit the waiting periods. Retain readable timestamps and avoid implying that edited elapsed time is execution latency.
+1. Open the [live home page](https://clearance-tower-30123867341.northamerica-northeast1.run.app/) and `/tower`, `/governor`, `/ledger` and `/carbon` in nearby tabs.
+2. Choose a flight with available risk and stage details. IDs and values change as the simulator runs.
+3. Rehearse the search, inspector, camera and Governor interactions. The playground does not alter production policy.
+4. Use a readable browser size, clear narration and captions. Avoid recording private accounts or credentials.
+5. If quoting verification numbers, use the current [readiness report](../proof/readiness.json). Do not imply that engineering tests are usability-study results.
 
 ## Shot list
 
-| Time | Screen | Point to demonstrate |
+| Time | Screen action | Point to explain |
 |---|---|---|
-| 0:00–0:12 | Console and one-line problem statement | The developer problem: deciding how much autonomy a change has earned |
-| 0:12–0:34 | Real intent issue and Dispatch session | Human intent, agent plan, implementation and Inspector review |
-| 0:34–0:57 | Real MR and generated child pipeline | Risk-adaptive verification and the governor's explanation |
-| 0:57–1:18 | Real clearance result and release | Show the autonomy level actually achieved; disclose any required approval |
-| 1:18–1:43 | Canary results and controlled failure | Show measured comparison, rollback and incident evidence |
-| 1:43–2:00 | Held change and policy explanation | Demonstrate the governance boundary without changing live policy |
-| 2:00–2:19 | Trust ledger and carbon report | Show actual trust change and distinguish modelled SCI from measurements |
-| 2:19–2:32 | Release evidence pack | Show chain verification and signature status |
-| 2:32–2:40 | Console and public repository link | State the delivered workflow and the demonstrated stages |
+| 0:00–0:15 | Home hero and Open the tower button | The problem: understanding progress and decisions across scattered delivery tools |
+| 0:15–0:35 | Flight-path diagram and a few scroll chapters | One consistent metaphor introduces nine stages; visitors can explore or enter directly |
+| 0:35–0:58 | Open Airspace, search a flight and use Holding | Overview-to-detail navigation, task-focused filtering and labelled simulated data |
+| 0:58–1:20 | Open a flight inspector | Plain-language clearance reasons, risk signals and stage history |
+| 1:20–1:38 | Airport and Riverside cameras; expand then restore the scene | Procedural setting and a choice between exploration and reading space |
+| 1:38–2:05 | Governor: choose a preset and vary trust or files | Learn the decision through immediate feedback; production policy is unchanged |
+| 2:05–2:22 | Trust ledger, then Carbon | Shared visual language for track records and modelled footprint |
+| 2:22–2:32 | Focus controls with Tab; show a narrow layout if available | Visible focus, labelled controls, reduced-motion support and responsive panels |
+| 2:32–2:40 | Return to Airspace and show repository link | Working interface, documented implementation and next usability evaluation |
 
-## Narration
+## Voiceover and longer tour
 
-Use [demo-narration.txt](narration.txt) as the voiceover draft. Adapt it to the real recorded outcomes and exact measured values. Do not speak a line that is unsupported by the screen evidence.
+Use [narration.txt](narration.txt) as the read-aloud draft. Describe the values actually shown. If a flight changes state during recording, explain that transition rather than reading a stale number.
 
-## Rehearsal and final video
+For a detailed technical presentation, use the [complete website walkthrough](website-walkthrough.md). Its forty sections cover the scene, panels, model and implementation limits.
 
-A local rehearsal can show the implemented UI and labelled mock integration results. The final submission video remains pending until real Duo and pipeline footage is captured. Upload the final cut to YouTube as Public or Unlisted, verify that it plays without signing in, and keep it under three minutes.
+## Evidence to keep accurate
 
-Use English captions. Save the YouTube URL and the final Devpost confirmation in the evidence register. Leave the submitted code, video and linked materials unchanged during judging.
+The 3D world is fictional. The public traffic is simulated. GitLab flow definitions are included as optional integration code; the preview does not run real Duo sessions. Carbon is modelled, and a formal accessibility audit and participant usability study remain future work.

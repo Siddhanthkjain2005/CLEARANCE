@@ -36,7 +36,7 @@ export function cloudRunPlan(target: CloudTarget) {
       'Billing and required service APIs enabled',
       `${service} service account exists`,
       'The three named Secret Manager secrets exist and the runtime account can access them',
-      'The GitLab read token can access the public hackathon project',
+      'The GitLab read token can access the configured project',
     ],
     commands: [deploy, ['run', 'services', 'describe', service, '--project', target.project, '--region', region, '--format=value(status.url)']],
   };

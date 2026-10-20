@@ -1,14 +1,14 @@
 {
   "schema": "clearance.readiness/v1",
-  "createdAt": "2026-10-20T12:58:11.209Z",
+  "createdAt": "2026-10-20T13:19:38.591Z",
   "localReady": true,
-  "submissionReady": false,
+  "scope": "Local engineering verification; external submission status is not assessed",
   "tests": {
     "count": 135,
     "passed": 135
   },
   "bundle": {
-    "totalGzipBytes": 149501,
+    "totalGzipBytes": 149482,
     "budgetKb": 160,
     "files": 3
   },
@@ -17,50 +17,48 @@
       "name": "types",
       "passed": true,
       "code": 0,
-      "durationMs": 5355,
+      "durationMs": 5598,
       "log": ".clearance-out/readiness/types.log"
     },
     {
       "name": "tests",
       "passed": true,
       "code": 0,
-      "durationMs": 10711,
+      "durationMs": 8049,
       "log": ".clearance-out/readiness/tests.log"
     },
     {
       "name": "build",
       "passed": true,
       "code": 0,
-      "durationMs": 229,
+      "durationMs": 198,
       "log": ".clearance-out/readiness/build.log"
     },
     {
       "name": "bundle",
       "passed": true,
       "code": 0,
-      "durationMs": 147,
+      "durationMs": 172,
       "log": ".clearance-out/readiness/bundle.log"
     },
     {
       "name": "docs",
       "passed": true,
       "code": 0,
-      "durationMs": 140,
+      "durationMs": 235,
       "log": ".clearance-out/readiness/docs.log"
     },
     {
       "name": "smoke",
       "passed": true,
       "code": 0,
-      "durationMs": 1246,
+      "durationMs": 1562,
       "log": ".clearance-out/readiness/smoke.log"
     }
   ],
   "external": {
-    "gitlabWorkspace": "Pending hackathon workspace provisioning",
-    "liveDuoWorkflow": "Not run; local mock evidence is not a live Duo session",
+    "gitlabIntegration": "Optional; local mock evidence does not verify live GitLab or Duo execution",
     "cloudDeployment": "Hosted preview is recorded separately in docs/proof/cloud-deployment.json; this local check does not verify live deployment reachability",
-    "youtubeVideo": "Pending final recording of real workflow and upload",
-    "devpostSubmission": "Pending owner registration and completed submission"
+    "presentation": "Product walkthrough and narration are maintained separately in docs/demo/"
   }
 }

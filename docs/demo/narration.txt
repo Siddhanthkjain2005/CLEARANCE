@@ -1,17 +1,19 @@
-Clearance helps teams decide how much freedom an agent's change has earned. Each change becomes a flight, with its risk, verification and outcome visible in one place.
+Software delivery has plenty of dashboards, but understanding a change still means moving between issues, reviews, pipelines and monitoring screens. Clearance brings progress and decision reasons into one shared view.
 
-A person starts with an intent issue. The Dispatch workflow plans the change, asks the governor for a predicted clearance, implements it with tests, and routes the result to an independent Inspector. The final recording will show this work in a real GitLab Duo session.
+Every change is a flight. Its author is the pilot, and nine gates form the approach to production. The landing page introduces this language through a scroll-driven journey, with a direct route into the tower whenever you are ready.
 
-The governor is deterministic code. It combines eight change-risk signals with the pilot's track record and the service's error budget. Verification follows risk, so a small change can take a lean path while a core rewrite receives broader checks. Security scanning remains in the pipeline.
+Inside the console, the airspace gives an overview and the flight board helps you find a specific change. Search by flight, title or pilot, or filter for traffic that is airborne or holding. The public preview clearly labels its traffic as simulated.
 
-New agents begin supervised. A human approves the outcome while the pilot builds a real record of successful flights. Once its measured trust and the change risk permit it, the autonomous path can request an automatic merge. The submission's chosen autonomy level must match the run shown here.
+Selecting a flight opens its inspector. Here, the clearance is accompanied by reasons, risk signals and a stage history. The goal is to explain why a decision happened, so a reviewer knows what needs attention.
 
-After release, progressive delivery compares the canary with the stable revision. Error rates, latency and SLO burn determine whether traffic advances. In a controlled failure run, the system rolls traffic back and opens an incident. The pilot's trust then reflects that outcome.
+The world gives that information a consistent setting. A procedural airport, aircraft, city, river and ground traffic support the flight metaphor. Camera presets offer useful viewpoints, while separate expand controls give more space to either the scene or the flight board.
 
-The same governor holds changes to the rules that govern agents. This boundary stays visible in the merge request explanation and the evidence trail.
+The Governor makes policy something you can explore. Choose a preset, adjust the proposed files, trust or error budget, and watch the decision update. These are what-if inputs; they do not change production policy or a pilot's actual record.
 
-Every flight can leave a hash-chained evidence pack, a trust-ledger update and a Software Carbon Intensity report. The carbon calculation models energy using public coefficients; it must label estimated durations and exclude unmeasured inference and browser rendering costs.
+The Trust ledger explains the track record behind a decision. The Carbon view explains the modelled footprint of delivery work and the assumptions behind it.
 
-The current local rehearsal verifies these engine and CLI paths against a mock GitLab API and deterministic canary probes. It is development evidence, not a real Duo run or Cloud Run deployment. The final cut will replace the pending segments with live session, pipeline, release and incident evidence.
+The interface includes labelled HTML controls, visible keyboard focus, text status labels and reduced-motion support. Responsive panels help preserve the reading experience at narrower sizes. A complete accessibility audit and participant usability study are still planned.
 
-Clearance makes delivery decisions inspectable, autonomy bounded, and failure reversible.
+Clearance uses TypeScript, Preact and a custom WebGL2 renderer, with a Node.js server and a deterministic decision engine. The source includes optional GitLab integration, while the hosted experience demonstrates the interface with simulated data.
+
+The result is a working exploration of a simple question: can a richer view of delivery make the next decision easier to understand?

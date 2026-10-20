@@ -4,16 +4,16 @@
 
 # Clearance
 
-**A control tower for autonomous software delivery.**
+**An immersive 3D workspace for understanding software delivery.**
 
-Risk-aware decisions. Earned agent trust. An accountable path from intent to production.
+Every change is a flight. See its progress, understand its risk and explore the decision behind its clearance.
 
 [![CI](https://github.com/Siddhanthkjain2005/CLEARANCE/actions/workflows/ci.yml/badge.svg)](https://github.com/Siddhanthkjain2005/CLEARANCE/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-91ebcd)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-22.18%2B-43853d)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178c6)](tsconfig.json)
 
-[Live demo](https://clearance-tower-30123867341.northamerica-northeast1.run.app/) · [Quick start](#quick-start) · [Documentation](docs/README.md) · [Architecture](docs/architecture.md)
+[Live demo](https://clearance-tower-30123867341.northamerica-northeast1.run.app/) · [Design case study](docs/design-case-study.md) · [Quick start](#quick-start) · [Documentation](docs/README.md)
 
 </div>
 
@@ -23,20 +23,32 @@ Risk-aware decisions. Earned agent trust. An accountable path from intent to pro
 
 ## Why Clearance?
 
-An agent can write a change quickly. Deciding whether it should merge, deploy and reach users requires more context. Clearance evaluates the change's risk, its pilot's delivery history and the service's remaining error budget, then explains how much human involvement is required.
+Delivery information is scattered across issues, pipeline logs, approvals and monitoring screens. Developers and reviewers need to answer three questions quickly: what is moving, what needs attention, and why?
 
-Every change becomes a flight. Nine delivery stages form its approach. A successful release lands; a blocked change holds; a failed canary goes around.
+Clearance brings those questions into one spatial interface. Every change becomes a flight, with nine delivery stages forming its approach. A successful release lands; a blocked change holds; a failed canary goes around. A searchable flight board and readable inspectors keep the underlying information close at hand.
+
+## Designed around the next decision
+
+- **Learn, then explore.** The landing page introduces the flight metaphor through a scroll-driven journey before opening the operational console.
+- **Overview, then detail.** The airspace shows the overall situation; selecting a flight reveals its stage history, risk signals and clearance explanation.
+- **Understand by trying.** The Governor playground lets visitors vary a proposed change and see the decision update without changing production policy.
+- **Keep information usable.** Semantic HTML controls, visible focus states, text status labels, reduced-motion support and responsive panels complement the 3D scene.
+- **Make the world coherent.** A procedural airport, river, city, terrain and traffic give the camera journey a consistent setting.
+
+Read the [design case study](docs/design-case-study.md) for user journeys, information architecture, interaction choices, accessibility details and current validation limits.
 
 ## What is inside
 
 | Capability | What it provides |
 |---|---|
+| **Interactive 3D console** | Procedural airport, aircraft, city, water, ground traffic and landscape; searchable flight board and detailed inspectors. |
+| **Guided product story** | A scroll-driven landing page, nine lifecycle chapters and direct routes into the analytical views. |
+| **Decision playground** | Editable change inputs, six presets and immediate policy explanations. |
 | **Deterministic governor** | Explainable autonomous, supervised, assisted and hold decisions from the same TypeScript engine used by the console and CLI. |
 | **Earned trust** | A conservative, risk-weighted pilot record with time decay, clean-landing streaks and an autonomy threshold. |
 | **Risk-adaptive verification** | Generated GitLab child pipelines, test-impact analysis and verification tiers matched to the change. |
 | **Canary analysis** | Error-rate and latency comparisons, SLO burn checks, promotion, extended observation and rollback decisions. |
 | **Evidence and footprint** | Hash-chained records, optional HMAC authentication and a documented Software Carbon Intensity model. |
-| **Interactive 3D console** | Procedural airport, aircraft, city, water, ground traffic and landscape; searchable flight board and detailed inspectors. |
 | **GitLab integration** | Dispatch, Medic and Debrief flow definitions, an agent configuration, CI/CD templates and eight read-only MCP tools. |
 
 The automation definitions are included for configuration and validation in a GitLab project. GitHub hosts this source repository and its verification workflow.
@@ -150,7 +162,7 @@ Start with the [documentation index](docs/README.md), [contribution guide](CONTR
 
 ## Status and scope
 
-The hosted preview and local verification are available. Real Duo execution, public GitLab pipeline history and the final hackathon submission remain separate work. Simulated agent actions and evidence badges are examples, and SCI figures use the assumptions documented in the [carbon methodology](docs/sci-methodology.md).
+The hosted interface is available with labelled simulated traffic and locally tested decision logic. Connecting real GitLab Duo execution and pipeline history is an optional integration step. Simulated agent actions and evidence badges are examples, and SCI figures use the assumptions documented in the [carbon methodology](docs/sci-methodology.md). Formal usability studies and a complete accessibility audit have not been conducted.
 
 ## Contributing and security
 

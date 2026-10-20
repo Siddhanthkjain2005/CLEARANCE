@@ -4,9 +4,9 @@ Prepared for the Google Cloud deployment on 20 October 2026.
 
 **Website:** https://clearance-tower-30123867341.northamerica-northeast1.run.app/
 
-**How to use this script:** Read the paragraphs under **Say** aloud. Follow the **Show** instructions while presenting. **Presenter notes** explain details you may need for questions. This is a long-form product and engineering walkthrough, not the under-three-minute hackathon video. Numbers, flight IDs and available flight-detail sections change as the simulator runs; describe the values actually on your screen.
+**How to use this script:** Read the paragraphs under **Say** aloud. Follow the **Show** instructions while presenting. **Presenter notes** explain details you may need for questions. This is a long-form product and engineering walkthrough; [script.md](script.md) provides a shorter interface tour. Numbers, flight IDs and available flight-detail sections change as the simulator runs; describe the values actually on your screen.
 
-**Version and evidence boundary:** This walkthrough is based on the source deployed as revision `clearance-tower-r6247c2ffeab2`. The public app is hosted on Cloud Run, but its delivery traffic is simulated. The risk calculation, governor and canary-analysis algorithms are implemented code. Current flight histories, agent activity, canary inputs and displayed evidence metadata are synthetic. The GitLab Duo flows and CI/CD configuration exist in the repository; real Duo execution and public GitLab pipeline evidence have not been connected to this deployment.
+**Version and evidence boundary:** This walkthrough follows the current source; [cloud-deployment.json](../proof/cloud-deployment.json) identifies the verified public revision. The public app is hosted on Cloud Run, but its delivery traffic is simulated. The risk calculation, governor and canary-analysis algorithms are implemented code. Current flight histories, agent activity, canary inputs and displayed evidence metadata are synthetic. The GitLab Duo flows and CI/CD configuration exist in the repository; real Duo execution and public GitLab pipeline evidence have not been connected to this deployment.
 
 ---
 
@@ -48,7 +48,7 @@ Prepared for the Google Cloud deployment on 20 October 2026.
 
 **Say:**
 
-“The main headline introduces the product in the language of the airspace. The supporting paragraph explains the mechanism: agents move changes through delivery, while Clearance decides how far they may proceed using risk, earned trust and policy.
+“The main headline introduces the product in the language of the airspace. The supporting paragraph invites us to follow a software change from intent to production and explore risk, earned trust and policy in one interactive airspace.
 
 “Open the tower is the main action. Explore the flight path takes us through the explanation first. The scroll prompt offers the same guided route through the page.
 
@@ -226,7 +226,7 @@ Prepared for the Google Cloud deployment on 20 October 2026.
 
 “The MCP note explains how agents can query the Tower as a tool. For example, assess_change can return the proposed change’s risk and clearance before implementation starts.
 
-“The final Enter the tower button moves into the console. The footer repeats the home link, identifies the MIT licence and hackathon context, and offers Back to top.”
+“The final Enter the tower button moves into the console. The footer repeats the home link, identifies the MIT licence, states Designed for clarity, and offers Back to top.”
 
 **Presenter note:** The crew cards explain the flow definitions. They are not buttons that launch three working agents from the public page.
 

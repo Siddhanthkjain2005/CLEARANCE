@@ -1,5 +1,5 @@
-// Reproduce the local submission checks and save their evidence. Local success
-// is deliberately separate from account provisioning and live Duo execution.
+// Reproduce local engineering checks and save their evidence. These checks
+// do not query external accounts, submission status or live Duo execution.
 
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -51,19 +51,17 @@ const report = {
   schema: 'clearance.readiness/v1',
   createdAt: new Date().toISOString(),
   localReady: results.every((check) => check.passed),
-  submissionReady: false,
+  scope: 'Local engineering verification; external submission status is not assessed',
   tests: { count, passed },
   bundle,
   checks: results,
   external: {
-    gitlabWorkspace: 'Pending hackathon workspace provisioning',
-    liveDuoWorkflow: 'Not run; local mock evidence is not a live Duo session',
+    gitlabIntegration: 'Optional; local mock evidence does not verify live GitLab or Duo execution',
     cloudDeployment: 'Hosted preview is recorded separately in docs/proof/cloud-deployment.json; this local check does not verify live deployment reachability',
-    youtubeVideo: 'Pending final recording of real workflow and upload',
-    devpostSubmission: 'Pending owner registration and completed submission',
+    presentation: 'Product walkthrough and narration are maintained separately in docs/demo/',
   },
 };
 mkdirSync(join(root, 'docs/proof'), { recursive: true });
 writeFileSync(join(root, 'docs/proof/readiness.json'), JSON.stringify(report, null, 2) + '\n');
-console.log(`\n${report.localReady ? 'Local checks complete.' : 'Local checks need attention.'} External submission steps remain pending.`);
+console.log(`\n${report.localReady ? 'Local checks complete.' : 'Local checks need attention.'} External account and submission status are not assessed.`);
 process.exitCode = report.localReady ? 0 : 1;

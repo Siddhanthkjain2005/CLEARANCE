@@ -8,15 +8,15 @@
       "args": [
         "build",
         "--build-arg",
-        "CLEARANCE_COMMIT=6247c2ffeab2",
+        "CLEARANCE_COMMIT=47ecdf7766fd",
         "-t",
-        "northamerica-northeast1-docker.pkg.dev/clearance-tower-20261020/clearance/tower:6247c2ffeab2",
+        "northamerica-northeast1-docker.pkg.dev/clearance-tower-20261020/clearance/tower:47ecdf7766fd",
         "."
       ]
     }
   ],
   "images": [
-    "northamerica-northeast1-docker.pkg.dev/clearance-tower-20261020/clearance/tower:6247c2ffeab2"
+    "northamerica-northeast1-docker.pkg.dev/clearance-tower-20261020/clearance/tower:47ecdf7766fd"
   ],
   "options": {
     "logging": "CLOUD_LOGGING_ONLY"

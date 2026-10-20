@@ -1,4 +1,4 @@
-// Prepare project settings after hackathon onboarding. The default is a dry
+// Prepare optional GitLab integration settings. The default is a dry
 // run; --apply writes only the displayed settings, intent label and webhook.
 // Tokens come from environment variables and never appear in the plan/output.
 

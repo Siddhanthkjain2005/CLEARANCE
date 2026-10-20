@@ -1,6 +1,6 @@
 {
   "schema": "clearance.local-proof/v1",
-  "createdAt": "2026-10-20T12:58:09.384Z",
+  "createdAt": "2026-10-20T13:19:36.367Z",
   "provenance": "Local CLI integration tests using an in-memory GitLab API and deterministic canary drills",
   "liveGitLab": false,
   "liveDuo": false,
@@ -376,7 +376,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/merge_requests?state=all&order_by=updated_at&sort=desc&updated_after=2026-10-06T12:58:09.321Z&per_page=30&per_page=100&page=1"
+      "path": "/projects/42/merge_requests?state=all&order_by=updated_at&sort=desc&updated_after=2026-10-06T13:19:36.294Z&per_page=30&per_page=100&page=1"
     },
     {
       "method": "GET",
@@ -388,11 +388,11 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/merge_requests/14"
+      "path": "/projects/42/packages/generic/clearance-blackbox/CLR-12/blackbox.json"
     },
     {
       "method": "GET",
-      "path": "/projects/42/packages/generic/clearance-blackbox/CLR-12/blackbox.json"
+      "path": "/projects/42/merge_requests/14"
     },
     {
       "method": "GET",
@@ -400,11 +400,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/packages/generic/clearance-blackbox/CLR-14/blackbox.json"
-    },
-    {
-      "method": "GET",
-      "path": "/projects/42/pipelines?sha=8b831d47c19029c57a11773e7490d31c4281cc6e&order_by=id&sort=desc&per_page=100&page=1"
+      "path": "/projects/42/pipelines?sha=bbfb1ded212701ec92e6f9878f13a83d224d8bb9&order_by=id&sort=desc&per_page=100&page=1"
     },
     {
       "method": "GET",
@@ -412,7 +408,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/pipelines/512/jobs?include_retried=false&per_page=100&page=1"
+      "path": "/projects/42/packages/generic/clearance-blackbox/CLR-14/blackbox.json"
     },
     {
       "method": "GET",
@@ -424,7 +420,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/pipelines/512/bridges"
+      "path": "/projects/42/pipelines/512/jobs?include_retried=false&per_page=100&page=1"
     },
     {
       "method": "GET",
@@ -436,7 +432,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/pipelines/513/jobs?include_retried=false&per_page=100&page=1"
+      "path": "/projects/42/pipelines/512/bridges"
     },
     {
       "method": "GET",
@@ -444,7 +440,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/merge_requests/14/notes?per_page=30&sort=desc"
+      "path": "/projects/42/pipelines/513/jobs?include_retried=false&per_page=100&page=1"
     },
     {
       "method": "GET",
@@ -452,11 +448,15 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/packages/generic/clearance-evidence/CLR-14/evidence.json"
+      "path": "/projects/42/merge_requests/14/notes?per_page=30&sort=desc"
     },
     {
       "method": "GET",
       "path": "/projects/42/pipelines/600/bridges"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/42/packages/generic/clearance-evidence/CLR-14/evidence.json"
     },
     {
       "method": "GET",
@@ -468,7 +468,7 @@
     },
     {
       "method": "GET",
-      "path": "/projects/42/issues?labels=intent&state=opened&updated_after=2026-10-06T12:58:09.321Z&per_page=20&per_page=100&page=1"
+      "path": "/projects/42/issues?labels=intent&state=opened&updated_after=2026-10-06T13:19:36.294Z&per_page=20&per_page=100&page=1"
     },
     {
       "method": "GET",

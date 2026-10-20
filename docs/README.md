@@ -1,12 +1,13 @@
 # Documentation
 
-Clearance is a control tower for autonomous delivery. Start with the live preview, then explore the decision model and integration guides.
+Clearance is an interactive 3D control tower for software delivery. Start with the live interface and design case study, then explore the decision model and optional integrations.
 
 ## Start here
 
 | Guide | Purpose |
 |---|---|
 | [Project README](../README.md) | Demo links, quick start, features and repository map |
+| [Design case study](design-case-study.md) | Problem, user journeys, information architecture, visual system and accessibility |
 | [Product overview](product-overview.md) | Delivery lifecycle, clearance levels and GitLab capabilities |
 | [Architecture](architecture.md) | Components, state, pipeline and security model |
 | [GitLab setup](setup.md) | Configure the flows, runners, variables and integration |
@@ -19,8 +20,8 @@ Clearance is a control tower for autonomous delivery. Start with the live previe
 |---|---|
 | [Complete website walkthrough](demo/website-walkthrough.md) | Forty sections of narration, screen actions and engineering notes |
 | [Walkthrough narration](demo/website-narration.txt) | Read-aloud version without screen instructions |
-| [Short demo storyboard](demo/script.md) | A 2:40 recording plan; final real-workflow footage is pending |
-| [Short demo narration](demo/narration.txt) | Voiceover draft to adapt to verified recorded outcomes |
+| [Short demo storyboard](demo/script.md) | A suggested 2:40 tour of the interface and core interactions |
+| [Short demo narration](demo/narration.txt) | Read-aloud product introduction for the suggested tour |
 
 ## Verification
 
@@ -34,13 +35,13 @@ Clearance is a control tower for autonomous delivery. Start with the live previe
 
 Current product screenshots are grouped in [images/](images/). Generated dependencies, build outputs, private configuration and local publication backups are excluded from Git.
 
-## Hackathon preparation
+## Project presentation
 
-- [Submission status](hackathon/submission-status.md)
-- [Devpost draft](hackathon/devpost.md)
-- [Account and owner setup](hackathon/owner-setup.md)
+- [Project status](presentation/project-status.md)
+- [Project story](presentation/project-story.md)
+- [Maintainer handoff](presentation/maintainer-handoff.md)
 
-These drafts track remaining external work. They do not replace real GitLab session/pipeline evidence or a submitted Devpost entry.
+These materials explain the product and distinguish the published interface from optional live integrations. Local checks do not determine external submission status.
 
 ## Project policies
 

@@ -72,7 +72,7 @@ export function Landing({ s }: { s: Snapshot }) {
         <div className="home-hero-copy">
           <p className="home-eyebrow"><span className="home-beacon" /> A control tower for autonomous delivery</p>
           <h1 id="home-title">Your code.<br /><span>Cleared for</span><br />takeoff.</h1>
-          <p className="home-intro">GitLab Duo agents fly your changes from intent to production. Clearance decides how far they can go, using real risk, earned trust and your policy.</p>
+          <p className="home-intro">See every software change from intent to production. Explore risk, earned trust and policy in one interactive airspace.</p>
           <div className="home-actions">
             <a className="home-button" href="/tower" onClick={go('/tower')}>Open the tower <Arrow /></a>
             <a className="home-text-link" href="#approach">Explore the flight path <span>↓</span></a>
@@ -172,7 +172,7 @@ export function Landing({ s }: { s: Snapshot }) {
 
       <section className="home-platform">
         <div className="home-wrap">
-          <div className="home-section-heading"><p className="home-eyebrow">03 / The crew</p><h2>Powered by GitLab Duo.<br /><span>Accountable to your tower.</span></h2><p>Three agent flows, adaptive CI/CD and a shared record in GitLab. The tower can be rebuilt from that record at any time.</p></div>
+          <div className="home-section-heading"><p className="home-eyebrow">03 / The crew</p><h2>One crew.<br /><span>A shared view of delivery.</span></h2><p>Explore the roles behind each change. GitLab Duo flow definitions connect planning, repair and incident review to the same tower.</p></div>
           <div className="home-flows">
             {FLOWS.map((flow, i) => <article key={flow.name}><span className="home-flow-trigger"><span>{String(i + 1).padStart(2, '0')}</span>{flow.trigger}</span><h3>{flow.name}<Arrow diagonal /></h3><p>{flow.description}</p></article>)}
           </div>
@@ -185,7 +185,7 @@ export function Landing({ s }: { s: Snapshot }) {
         <a className="home-button" href="/tower" onClick={go('/tower')}>Enter the tower <Arrow /></a>
       </section>
 
-      <footer className="home-footer"><Wordmark /><span>MIT licensed · Built for the GitLab Transcend hackathon</span><a href="#home-title">Back to top ↑</a></footer>
+      <footer className="home-footer"><Wordmark /><span>MIT licensed · Designed for clarity</span><a href="#home-title">Back to top ↑</a></footer>
     </div>
   );
 }

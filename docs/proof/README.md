@@ -15,4 +15,6 @@ These files are **local test evidence**. GitLab is mocked, trust history is a se
 
 The latest readiness run passed 135 tests. `browser-qa.json` records the desktop and 375-pixel mobile review. Current screenshots are in `docs/images/*.jpg`.
 
-Before submitting, add links to actual GitLab issues, Duo sessions, merge requests, pipelines, releases and incidents in [the submission status](../hackathon/submission-status.md), then record those real runs in the final video.
+Optional live GitLab integration requires its own issue, Duo session, MR, pipeline, release and incident evidence. Those checks are separate from reviewing the published interface. See [project status](../presentation/project-status.md), the [design case study](../design-case-study.md) and the [product walkthrough](../demo/script.md) for the current experience and its evaluation limits.
+
+The readiness report assesses local engineering behavior only. It does not determine account access, usability outcomes, accessibility conformance or external submission status.

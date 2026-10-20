@@ -26,7 +26,7 @@ Read chapter headings as navigation cues, not necessarily as spoken lines. Dynam
 
 03. Homepage hero and tower-status instrument
 
-“The main headline introduces the product in the language of the airspace. The supporting paragraph explains the mechanism: agents move changes through delivery, while Clearance decides how far they may proceed using risk, earned trust and policy.
+“The main headline introduces the product in the language of the airspace. The supporting paragraph invites us to follow a software change from intent to production and explore risk, earned trust and policy in one interactive airspace.
 
 “Open the tower is the main action. Explore the flight path takes us through the explanation first. The scroll prompt offers the same guided route through the page.
 
@@ -154,7 +154,7 @@ Read chapter headings as navigation cues, not necessarily as spoken lines. Dynam
 
 “The MCP note explains how agents can query the Tower as a tool. For example, assess_change can return the proposed change’s risk and clearance before implementation starts.
 
-“The final Enter the tower button moves into the console. The footer repeats the home link, identifies the MIT licence and hackathon context, and offers Back to top.”
+“The final Enter the tower button moves into the console. The footer repeats the home link, identifies the MIT licence, states Designed for clarity, and offers Back to top.”
 
 16. Console shell — every persistent control
 

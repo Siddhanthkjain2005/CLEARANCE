@@ -1,17 +1,17 @@
 # Setting up Clearance on GitLab
 
-First complete [Devpost registration](https://gitlab-transcend.devpost.com/) and [GitLab hackathon onboarding](https://contributors.gitlab.com/transcend-hackathon). GitLab provisions the hackathon workspace after approval; the published guidance allows about 24 business hours. The steps below begin after that workspace exists. Account approval, runner availability and cloud permissions can take longer than the local setup.
+The [public interface](https://clearance-tower-30123867341.northamerica-northeast1.run.app/) and local simulated mode work without a GitLab account. This guide is for maintainers who want to connect actual issues, pipelines and agent workflows. It requires a GitLab project with suitable permissions and access to the relevant Duo capabilities.
 
 | After step | You have |
 |---|---|
-| 2 | The full nine-stage pipeline running on every merge request and on `main`, with canary drills |
-| 4 | Duo agents that turn intent issues into merge requests, fix failed pipelines and write postmortems |
-| 5 | The live console following your project in real time |
-| 6 | Real canary deployments on Cloud Run (and the Google Cloud bonus) |
+| 2 | Pipeline configuration ready to validate on merge requests and `main`, with canary drills |
+| 4 | Duo flow definitions and triggers ready for a real integration run |
+| 5 | Console synchronization and webhook settings for your project |
+| 6 | Cloud Run canary deployment configuration to validate |
 
 ## Before you start
 
-- A project in the hackathon's GitLab group, with GitLab Duo Agent Platform available. The group provisioned for the hackathon has this.
+- A GitLab project with a runner and permissions to configure CI/CD. Duo flows additionally require access to the GitLab Duo Agent Platform.
 - Node.js 22.18 or newer locally.
 - For step 6: a Google Cloud project with billing enabled and the `gcloud` CLI.
 
@@ -21,14 +21,11 @@ First complete [Devpost registration](https://gitlab-transcend.devpost.com/) and
 cd clearance
 npm ci                           # reproduce the checked dependency versions
 node scripts/check-readiness.ts   # tests, types, build, bundle, docs, smoke and local proof
-git init -b main
-git add -A
-git commit -m "feat: clearance control tower" -m "Clearance-Pilot: ai-clearance-dispatch"
-git remote add origin https://gitlab.com/<group>/<project>.git
-git push -u origin main
+git remote add gitlab https://gitlab.com/<group>/<project>.git
+git push gitlab main
 ```
 
-Use the project URL GitLab provisioned for this hackathon; do not substitute a personal repository for the required hackathon workspace. This copy is already initialized on `main`.
+The published repository is already initialized on `main` with GitHub as `origin`. Add a separate GitLab remote for the project you intend to configure.
 
 Preview the repeatable project settings without making remote changes:
 
@@ -40,7 +37,7 @@ After reviewing that plan, a project owner with the required API permissions can
 
 Then in the project:
 
-- **Settings > General > Visibility:** set the project to *Public*. The hackathon requires a public repository, and GitLab detects the MIT `LICENSE` and shows it in the project overview.
+- **Settings > General > Visibility:** choose visibility appropriate for your project. `--public` in the helper explicitly requests a public project; omit it for no visibility change.
 - **Settings > Merge requests:**
   - Turn on *Pipelines must succeed*. This is what makes a Clearance hold actually block a merge.
   - Turn on *Enable "Delete source branch" option by default*.
@@ -51,7 +48,7 @@ Then in the project:
 
 ## 2. CI/CD variables
 
-Have the project owner review **Settings > CI/CD > Variables** and add these. Mark secrets as *Masked* and *Hidden* where supported. Required MR jobs need access on the branches used for the demo; scope that access deliberately. Never enable privileged secrets for unreviewed fork pipelines. A provisioned Developer + AI account may need owner assistance to configure tokens, protected branches and project settings.
+Have the project owner review **Settings > CI/CD > Variables** and add these. Mark secrets as *Masked* and *Hidden* where supported. Required MR jobs need access on the branches used for integration testing; scope that access deliberately. Never enable privileged secrets for unreviewed fork pipelines. Configuring tokens, protected branches and project settings may require a maintainer or owner.
 
 | Variable | Value | Needed for |
 |---|---|---|
@@ -137,20 +134,11 @@ Then:
 - **Webhook:** go to **Settings > Webhooks**. Set the URL to `https://<tower>/webhooks/gitlab` and the secret token to `CLEARANCE_WEBHOOK_SECRET`. Select pipeline, job, merge request, issue, comment, deployment and release events.
 - **CI variables:** set `CLEARANCE_TOWER_URL` to the Tower URL and `CLEARANCE_TOWER_TOKEN` to the same token, so jobs stream events as they happen.
 
-## 6. Google Cloud (Cloud Run canaries and the bonus)
+## 6. Google Cloud — optional live canaries
 
-### Fast path
+### Existing hosted preview
 
-```shell
-gcloud config set project <PROJECT_ID>
-gcloud services enable run.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com iamcredentials.googleapis.com
-gcloud run deploy clearance-tower --source . --region northamerica-northeast1 --allow-unauthenticated
-```
-
-That builds the Dockerfile with Cloud Build and gives you a public URL running the simulated console. For CI deployments without workload identity:
-
-1. Create a service account with *Cloud Run Developer*, *Artifact Registry Writer* and *Service Account User*.
-2. Add its key, base64-encoded, as the masked variable `GCP_SA_KEY`.
+The interface is already hosted on Cloud Run in simulated mode. See [deployment.md](deployment.md) for the explicit target, immutable image deployment and verification. Live canary integration is a separate setup; prefer the workload identity path below for CI authentication.
 
 ### Recommended path: workload identity federation and Terraform
 
@@ -199,10 +187,10 @@ That builds the Dockerfile with Cloud Build and gives you a public URL running t
 3. Watch the merge request. The pipeline generates its verification tier, the gate posts its decision, and, if the pilot has earned it, the merge request merges itself.
 4. Watch `main`. You'll see the release, the canary steps and the landing, and the trust ledger moves.
 
-[demo-script.md](demo/script.md) turns this into a three-minute video.
+[The product walkthrough](demo/script.md) presents the interface. Add actual session and pipeline footage only when demonstrating a verified live integration.
 
-## 8. Submission evidence
+## 8. Integration evidence and maintenance
 
-Save the real issue, Duo session, MR, pipeline, release, rollback incident and public deployment links in [submission-status.md](hackathon/submission-status.md). The exported local mock rehearsal is useful development evidence, but it is not a substitute for visible GitLab pipeline history and actual Duo execution.
+Retain actual issue, Duo session, MR, pipeline, release, rollback incident and deployment links when validating a live integration. The exported local mock rehearsal checks implementation behavior; label it separately from real pipeline history and agent execution.
 
-Before submission, follow [owner-setup.md](hackathon/owner-setup.md) for the remaining protected-file bindings and cloud project confirmation. Keep the final repository and video unchanged during judging, as described in the [hackathon resources](https://gitlab-transcend.devpost.com/resources).
+Follow the [maintainer handoff](presentation/maintainer-handoff.md) for protected-file bindings and owner review. See [project status](presentation/project-status.md) for the published interface and further product work.

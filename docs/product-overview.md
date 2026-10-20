@@ -4,7 +4,7 @@
 
 ![The Clearance tower: changes fly as flights through nine lifecycle gates toward production](images/tower.jpg)
 
-**Current verification:** [the public tower](https://clearance-tower-30123867341.northamerica-northeast1.run.app/tower) is deployed on Cloud Run with labelled simulated traffic. Local checks are reproducible with `node scripts/check-readiness.ts`. Real Duo sessions and public pipeline history are pending account onboarding. See [deployment evidence](proof/cloud-deployment.json), [submission status](hackathon/submission-status.md) and [verification evidence](proof/README.md).
+**Current verification:** [the public tower](https://clearance-tower-30123867341.northamerica-northeast1.run.app/tower) is deployed on Cloud Run with labelled simulated traffic. Local checks are reproducible with `node scripts/check-readiness.ts`. Real Duo sessions and live GitLab pipeline history require optional integration setup. See the [design case study](design-case-study.md), [deployment evidence](proof/cloud-deployment.json), [project status](presentation/project-status.md) and [verification evidence](proof/README.md).
 
 - **Target autonomy:** Hands-off for eligible changes after the pilot earns enough trust. A real end-to-end demonstration is still pending.
 - **Lifecycle coverage:** implementation spans all nine stages, from plan through govern; live GitLab evidence is pending.
@@ -114,7 +114,7 @@ node src/cli/clearance.ts fly --drill --fault errors   # watch a go-around
 
 ## Set it up on GitLab
 
-[docs/setup.md](setup.md) covers hackathon onboarding, CI/CD variables, the three flows and their triggers, the webhook, and optional deployment. Account approval is an external prerequisite.
+[docs/setup.md](setup.md) covers optional GitLab configuration, CI/CD variables, the three flows and their triggers, the webhook and live deployment. Access to the relevant GitLab capabilities is required for that integration; the public interface and local simulated mode work without it.
 
 ## Repository
 
